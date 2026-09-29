@@ -29,12 +29,12 @@ struct WelcomeView: View {
                             .tracking(2)
                             .foregroundStyle(AppColors.accentDarkOnDark)
 
-                        Text("Know your car.\nUnderstand your costs.")
+                        Text("Aracını tanı.\nMasraflarını anla.")
                             .font(.system(.largeTitle, weight: .bold))
                             .foregroundStyle(.white)
                     }
 
-                    Text("Track maintenance, fuel, expenses and your vehicle history in one place.")
+                    Text("Bakım, yakıt, giderler ve araç geçmişini tek bir yerden takip et.")
                         .font(AppTypography.body)
                         .foregroundStyle(.white.opacity(0.7))
                 }
@@ -45,7 +45,7 @@ struct WelcomeView: View {
 
                 VStack(spacing: AppSpacing.sm) {
                     Button(action: onGetStarted) {
-                        Text("Get Started")
+                        Text("Başlayalım")
                             .font(AppTypography.headline)
                             .frame(maxWidth: .infinity)
                             .frame(height: AppSizes.buttonHeight)
@@ -56,7 +56,7 @@ struct WelcomeView: View {
                     .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
 
                     Button(action: onSignIn) {
-                        Text("I Already Have an Account")
+                        Text("Zaten Hesabım Var")
                             .font(AppTypography.headline)
                             .frame(maxWidth: .infinity)
                             .frame(height: AppSizes.buttonHeight)
@@ -73,12 +73,8 @@ struct WelcomeView: View {
     }
 
     private var backgroundSurface: some View {
-        LinearGradient(
-            colors: [Color(hex: 0x24304A), Color(hex: 0x05070C)],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .ignoresSafeArea()
+        LinearGradient.graphiteSurface(startPoint: .top, endPoint: .bottom)
+            .ignoresSafeArea()
     }
 }
 

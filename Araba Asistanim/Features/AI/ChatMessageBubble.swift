@@ -25,7 +25,7 @@ struct ChatMessageBubble: View {
                     .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous))
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("You said: \(message.text)")
+            .accessibilityLabel("Sen: \(message.text)")
         } else {
             HStack(alignment: .top, spacing: AppSpacing.xs) {
                 Image(systemName: "sparkles")
@@ -41,7 +41,7 @@ struct ChatMessageBubble: View {
                 Spacer(minLength: AppSizes.iconHero)
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Assistant said: \(message.text)")
+            .accessibilityLabel("Asistan: \(message.text)")
         }
     }
 }

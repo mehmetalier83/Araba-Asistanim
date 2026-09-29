@@ -31,7 +31,7 @@ struct PlaceholderSheet: View {
 
                 Spacer()
 
-                PrimaryButton(title: "Got it") {
+                PrimaryButton(title: "Anladım") {
                     dismiss()
                 }
                 .padding(.horizontal, AppSpacing.lg)
@@ -41,7 +41,7 @@ struct PlaceholderSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { dismiss() }
+                    Button("Kapat") { dismiss() }
                 }
             }
         }

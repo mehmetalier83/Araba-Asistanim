@@ -19,11 +19,11 @@ struct RegisterView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.xl) {
                 VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                    Text("Create your account")
+                    Text("Hesabını oluştur")
                         .font(AppTypography.largeTitle)
                         .foregroundStyle(AppTheme.textPrimary)
 
-                    Text("Start tracking your vehicle in minutes.")
+                    Text("Aracını dakikalar içinde takip etmeye başla.")
                         .font(AppTypography.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                 }
@@ -31,16 +31,16 @@ struct RegisterView: View {
 
                 VStack(alignment: .leading, spacing: AppSpacing.md) {
                     HStack(spacing: AppSpacing.sm) {
-                        AppTextField(title: "First Name", placeholder: "Jane", text: $firstName, textContentType: .givenName, errorMessage: firstNameError)
+                        AppTextField(title: "Ad", placeholder: "Ayşe", text: $firstName, textContentType: .givenName, errorMessage: firstNameError)
                             .onChange(of: firstName) { firstNameError = nil }
 
-                        AppTextField(title: "Last Name", placeholder: "Doe", text: $lastName, textContentType: .familyName, errorMessage: lastNameError)
+                        AppTextField(title: "Soyad", placeholder: "Yılmaz", text: $lastName, textContentType: .familyName, errorMessage: lastNameError)
                             .onChange(of: lastName) { lastNameError = nil }
                     }
 
                     AppTextField(
-                        title: "Email",
-                        placeholder: "you@example.com",
+                        title: "E-posta",
+                        placeholder: "sen@ornek.com",
                         text: $email,
                         keyboardType: .emailAddress,
                         textContentType: .username,
@@ -49,8 +49,8 @@ struct RegisterView: View {
                     .onChange(of: email) { emailError = nil; authViewModel.clearError() }
 
                     AppTextField(
-                        title: "Password",
-                        placeholder: "Password",
+                        title: "Şifre",
+                        placeholder: "Şifre",
                         text: $password,
                         isSecure: true,
                         textContentType: .newPassword
@@ -62,8 +62,8 @@ struct RegisterView: View {
                     }
 
                     AppTextField(
-                        title: "Confirm Password",
-                        placeholder: "Password",
+                        title: "Şifreyi Onayla",
+                        placeholder: "Şifre",
                         text: $confirmPassword,
                         isSecure: true,
                         textContentType: .newPassword,
@@ -76,21 +76,21 @@ struct RegisterView: View {
                     ErrorView(message: errorMessage)
                 }
 
-                PrimaryButton(title: "Create Account", isLoading: authViewModel.isAuthenticating) {
+                PrimaryButton(title: "Hesap Oluştur", isLoading: authViewModel.isAuthenticating) {
                     submit()
                 }
             }
             .padding(AppSpacing.md)
         }
         .background(AppTheme.background)
-        .navigationTitle("Create Account")
+        .navigationTitle("Hesap Oluştur")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
     }
 
     private var passwordRequirements: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Password requirements")
+            Text("Şifre gereksinimleri")
                 .font(AppTypography.footnote)
                 .foregroundStyle(AppTheme.textSecondary)
 
@@ -105,7 +105,7 @@ struct RegisterView: View {
                         .foregroundStyle(satisfied ? AppTheme.textPrimary : AppTheme.textSecondary)
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(requirement.description): \(satisfied ? "met" : "not met")")
+                .accessibilityLabel("\(requirement.description): \(satisfied ? "karşılandı" : "karşılanmadı")")
             }
         }
         .padding(.top, -AppSpacing.xs)
@@ -114,10 +114,10 @@ struct RegisterView: View {
 
     private func submit() {
         authViewModel.clearError()
-        firstNameError = firstName.trimmingCharacters(in: .whitespaces).isEmpty ? "Enter your first name." : nil
-        lastNameError = lastName.trimmingCharacters(in: .whitespaces).isEmpty ? "Enter your last name." : nil
-        emailError = email.isValidEmail ? nil : "Enter a valid email address."
-        confirmPasswordError = confirmPassword == password ? nil : "Passwords don't match."
+        firstNameError = firstName.trimmingCharacters(in: .whitespaces).isEmpty ? "Adını gir." : nil
+        lastNameError = lastName.trimmingCharacters(in: .whitespaces).isEmpty ? "Soyadını gir." : nil
+        emailError = email.isValidEmail ? nil : "Geçerli bir e-posta adresi gir."
+        confirmPasswordError = confirmPassword == password ? nil : "Şifreler eşleşmiyor."
         hasTouchedPassword = true
 
         guard firstNameError == nil, lastNameError == nil, emailError == nil,

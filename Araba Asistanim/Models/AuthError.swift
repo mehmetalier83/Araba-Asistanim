@@ -13,15 +13,15 @@ enum AuthError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .invalidCredentials:
-            return "Incorrect email or password."
+            return "E-posta veya şifre hatalı."
         case .emailAlreadyInUse:
-            return "An account with this email already exists."
+            return "Bu e-posta ile zaten bir hesap var."
         case .weakPassword:
-            return "Your password doesn't meet the requirements."
+            return "Şifren gereksinimleri karşılamıyor."
         case .network:
-            return "Unable to connect. Please check your internet connection and try again."
+            return "Bağlantı kurulamadı. İnternet bağlantını kontrol edip tekrar dene."
         case .unknown:
-            return "Something went wrong. Please try again."
+            return "Bir şeyler ters gitti. Lütfen tekrar dene."
         }
     }
 }

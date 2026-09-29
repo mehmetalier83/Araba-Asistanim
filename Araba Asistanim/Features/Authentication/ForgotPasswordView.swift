@@ -18,7 +18,7 @@ struct ForgotPasswordView: View {
         }
         .padding(AppSpacing.md)
         .background(AppTheme.background)
-        .navigationTitle("Forgot Password")
+        .navigationTitle("Şifremi Unuttum")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
     }
@@ -27,19 +27,19 @@ struct ForgotPasswordView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.xl) {
                 VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                    Text("Reset your password")
+                    Text("Şifreni sıfırla")
                         .font(AppTypography.largeTitle)
                         .foregroundStyle(AppTheme.textPrimary)
 
-                    Text("Enter the email associated with your account and we'll send you a reset link.")
+                    Text("Hesabına bağlı e-posta adresini gir, sana bir sıfırlama bağlantısı gönderelim.")
                         .font(AppTypography.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                 }
                 .padding(.top, AppSpacing.md)
 
                 AppTextField(
-                    title: "Email",
-                    placeholder: "you@example.com",
+                    title: "E-posta",
+                    placeholder: "sen@ornek.com",
                     text: $email,
                     keyboardType: .emailAddress,
                     textContentType: .username,
@@ -47,7 +47,7 @@ struct ForgotPasswordView: View {
                 )
                 .onChange(of: email) { emailError = nil }
 
-                PrimaryButton(title: "Send Reset Link", isLoading: isLoading) {
+                PrimaryButton(title: "Sıfırlama Bağlantısı Gönder", isLoading: isLoading) {
                     submit()
                 }
             }
@@ -64,11 +64,11 @@ struct ForgotPasswordView: View {
                 .accessibilityHidden(true)
 
             VStack(spacing: AppSpacing.xxs) {
-                Text("Check your inbox")
+                Text("Gelen kutunu kontrol et")
                     .font(AppTypography.title2)
                     .foregroundStyle(AppTheme.textPrimary)
 
-                Text("Instructions to reset your password have been sent to \(email).")
+                Text("Şifreni sıfırlamak için gerekli talimatlar \(email) adresine gönderildi.")
                     .font(AppTypography.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -81,7 +81,7 @@ struct ForgotPasswordView: View {
     }
 
     private func submit() {
-        emailError = email.isValidEmail ? nil : "Enter a valid email address."
+        emailError = email.isValidEmail ? nil : "Geçerli bir e-posta adresi gir."
         guard emailError == nil else { return }
 
         isLoading = true

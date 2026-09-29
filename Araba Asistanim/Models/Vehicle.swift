@@ -42,10 +42,10 @@ enum FuelType: String, CaseIterable, Hashable {
 
     var displayName: String {
         switch self {
-        case .gasoline: return "Gasoline"
-        case .diesel: return "Diesel"
-        case .hybrid: return "Hybrid"
-        case .electric: return "Electric"
+        case .gasoline: return "Benzinli"
+        case .diesel: return "Dizel"
+        case .hybrid: return "Hibrit"
+        case .electric: return "Elektrikli"
         }
     }
 }

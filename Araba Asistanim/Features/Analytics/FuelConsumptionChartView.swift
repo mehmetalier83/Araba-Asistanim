@@ -8,16 +8,16 @@ struct FuelConsumptionChartView: View {
     var body: some View {
         Chart(data) { point in
             LineMark(
-                x: .value("Month", point.month),
-                y: .value("Consumption", point.value)
+                x: .value("Ay", point.month),
+                y: .value("Tüketim", point.value)
             )
             .foregroundStyle(AppTheme.primary)
             .symbol(.circle)
             .interpolationMethod(.catmullRom)
 
             PointMark(
-                x: .value("Month", point.month),
-                y: .value("Consumption", point.value)
+                x: .value("Ay", point.month),
+                y: .value("Tüketim", point.value)
             )
             .foregroundStyle(AppTheme.primary)
         }
@@ -26,7 +26,7 @@ struct FuelConsumptionChartView: View {
         }
         .environment(\.locale, Locale(identifier: "en_US"))
         .frame(height: 180)
-        .accessibilityLabel("Fuel consumption chart")
+        .accessibilityLabel("Yakıt tüketimi grafiği")
         .accessibilityValue(accessibilitySummary)
     }
 

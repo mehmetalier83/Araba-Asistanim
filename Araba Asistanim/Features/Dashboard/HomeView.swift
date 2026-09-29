@@ -4,6 +4,7 @@ struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @EnvironmentObject private var appState: AppState
     @State private var path = NavigationPath()
+    @State private var isShowingNotifications = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -17,10 +18,10 @@ struct HomeView: View {
 
                     quickActions
 
-                    VehicleHealthCard(rows: viewModel.healthRows)
+                    statRow
 
                     if let item = viewModel.nextMaintenanceItem {
-                        upcomingMaintenance(item)
+                        nextServiceBanner(item)
                     }
 
                     recentActivity
@@ -50,8 +51,15 @@ struct HomeView: View {
             .sheet(isPresented: $viewModel.isShowingInsightDetail) {
                 PlaceholderSheet(
                     systemImage: "sparkles",
-                    title: "Fuel Consumption Insight",
+                    title: "Yakıt Tüketimi Analizi",
                     message: viewModel.aiInsightDetail
+                )
+            }
+            .sheet(isPresented: $isShowingNotifications) {
+                PlaceholderSheet(
+                    systemImage: "bell.fill",
+                    title: "Bildirimler",
+                    message: "Bildirimler henüz eklenmedi. Bu özellik ileride kullanılabilir olacak."
                 )
             }
         }
@@ -62,19 +70,30 @@ struct HomeView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Good morning")
-                    .font(AppTypography.title)
-                    .foregroundStyle(AppTheme.textPrimary)
-
-                Text("Here's how your car is doing.")
+                Text("Günaydın,")
                     .font(AppTypography.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
+
+                Text("\(viewModel.vehicle.make)'in hazır 👋")
+                    .font(AppTypography.title)
+                    .foregroundStyle(AppTheme.textPrimary)
             }
 
             Spacer()
 
-            IconButton(systemImage: "gearshape.fill", accessibilityLabel: "Settings") {
-                path.append(HomeRoute.settings)
+            HStack(spacing: AppSpacing.xs) {
+                ZStack(alignment: .topTrailing) {
+                    IconButton(systemImage: "bell.fill", accessibilityLabel: "Bildirimler") {
+                        isShowingNotifications = true
+                    }
+                    BadgeView()
+                        .offset(x: -6, y: 6)
+                        .allowsHitTesting(false)
+                }
+
+                IconButton(systemImage: "gearshape.fill", accessibilityLabel: "Ayarlar") {
+                    path.append(HomeRoute.settings)
+                }
             }
         }
         .padding(.top, AppSpacing.xs)
@@ -91,9 +110,9 @@ struct HomeView: View {
                     VStack(spacing: AppSpacing.xxs) {
                         Image(systemName: action.systemImage)
                             .font(.system(size: AppSizes.iconMedium * 0.75, weight: .medium))
-                            .foregroundStyle(AppTheme.primary)
+                            .foregroundStyle(action.tintColor)
                             .frame(width: AppSizes.minTouchTarget, height: AppSizes.minTouchTarget)
-                            .background(AppTheme.primarySubtle)
+                            .background(action.tintColor.opacity(0.14))
                             .clipShape(Circle())
 
                         Text(action.title)
@@ -109,52 +128,89 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Upcoming maintenance
+    // MARK: - Stat row
 
-    private func upcomingMaintenance(_ item: MaintenanceRecord) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            SectionHeader(title: "Upcoming Maintenance", actionTitle: "View All") {
-                appState.selectedTab = .maintenance
+    private var statRow: some View {
+        HStack(spacing: AppSpacing.sm) {
+            FuelTrendCard(
+                value: viewModel.fuelConsumptionText,
+                changePercent: viewModel.fuelConsumptionChangePercent,
+                history: viewModel.fuelHistory
+            ) {
+                appState.selectedTab = .analytics
             }
 
-            Button {
-                appState.selectedTab = .maintenance
-            } label: {
-                CardView {
-                    HStack(spacing: AppSpacing.sm) {
-                        Image(systemName: item.category.systemImage)
-                            .font(.system(size: AppSizes.iconSmall))
-                            .foregroundStyle(item.status.tagTone.foreground)
-                            .frame(width: AppSizes.iconLarge, height: AppSizes.iconLarge)
-                            .background(item.status.tagTone.background)
-                            .clipShape(Circle())
-                            .accessibilityHidden(true)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(item.title)
-                                .font(AppTypography.bodyEmphasized)
-                                .foregroundStyle(AppTheme.textPrimary)
-
-                            Text(item.date.formattedDayMonthYear())
-                                .font(AppTypography.caption)
-                                .foregroundStyle(AppTheme.textSecondary)
-                        }
-
-                        Spacer()
-
-                        TagView(text: item.status.label, tone: item.status.tagTone)
-                    }
-                }
+            ExpenseBreakdownCard(
+                value: viewModel.monthlyExpensesText,
+                changePercent: viewModel.monthlyExpensesChangePercent,
+                breakdown: viewModel.expenseBreakdown
+            ) {
+                appState.selectedTab = .analytics
             }
-            .buttonStyle(.appPressScale)
         }
+    }
+
+    // MARK: - Next service
+
+    private func nextServiceBanner(_ item: MaintenanceRecord) -> some View {
+        let tone = item.status.tagTone
+        let remaining = viewModel.nextServiceRemainingKm
+        let mileageLine = remaining > 0
+            ? "\(remaining.formattedMileage()) kaldı"
+            : "\(abs(remaining).formattedMileage()) geçti"
+
+        return Button {
+            appState.selectedTab = .maintenance
+        } label: {
+            HStack(spacing: AppSpacing.sm) {
+                Image(systemName: item.category.systemImage)
+                    .font(.system(size: AppSizes.iconMedium))
+                    .foregroundStyle(tone.foreground)
+                    .frame(width: AppSizes.avatarSize, height: AppSizes.avatarSize)
+                    .background(tone.background)
+                    .clipShape(Circle())
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Text("Sıradaki Bakım")
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppTheme.textSecondary)
+                        Text("· \(item.status.label)")
+                            .font(AppTypography.captionEmphasized)
+                            .foregroundStyle(tone.foreground)
+                    }
+
+                    Text(item.title)
+                        .font(AppTypography.bodyEmphasized)
+                        .foregroundStyle(AppTheme.textPrimary)
+
+                    Text("\(mileageLine) · \(item.date.formattedDayMonthYear())")
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
+
+                Spacer(minLength: AppSpacing.xs)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: AppSizes.iconXSmall, weight: .semibold))
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
+            .padding(AppSpacing.md)
+            .background(tone.background)
+            .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous))
+        }
+        .buttonStyle(.appPressScale)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Sıradaki bakım: \(item.title), \(item.status.label), \(mileageLine)")
+        .accessibilityHint("Bakım sekmesine git")
     }
 
     // MARK: - Recent activity
 
     private var recentActivity: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            SectionHeader(title: "Recent Activity")
+            SectionHeader(title: "Son Hareketler")
 
             CardView {
                 VStack(spacing: AppSpacing.sm) {
@@ -187,7 +243,7 @@ struct HomeView: View {
                         .foregroundStyle(AppTheme.textPrimary)
                         .multilineTextAlignment(.leading)
 
-                    Text("View Details")
+                    Text("Detayları Gör")
                         .font(AppTypography.caption)
                         .foregroundStyle(AppTheme.primary)
                 }
@@ -199,8 +255,8 @@ struct HomeView: View {
             .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous))
         }
         .buttonStyle(.appPressScale)
-        .accessibilityLabel("AI Insight: \(viewModel.aiInsightMessage)")
-        .accessibilityHint("View details")
+        .accessibilityLabel("AI Analizi: \(viewModel.aiInsightMessage)")
+        .accessibilityHint("Detayları gör")
     }
 }
 

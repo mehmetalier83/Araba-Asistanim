@@ -9,9 +9,9 @@ struct VehicleListView: View {
                 if viewModel.vehicles.isEmpty {
                     EmptyStateView(
                         systemImage: "car.2.fill",
-                        title: "Your garage is empty",
-                        message: "Add your first vehicle to start tracking maintenance, fuel and expenses.",
-                        actionTitle: "Add Vehicle"
+                        title: "Garajın boş",
+                        message: "Bakım, yakıt ve giderleri takip etmeye başlamak için ilk aracını ekle.",
+                        actionTitle: "Araç Ekle"
                     ) {
                         viewModel.isShowingAddVehicle = true
                     }
@@ -30,7 +30,7 @@ struct VehicleListView: View {
                 }
             }
             .background(AppTheme.background)
-            .navigationTitle("Vehicles")
+            .navigationTitle("Araçlar")
             .navigationDestination(for: Vehicle.self) { vehicle in
                 VehicleDetailView(vehicle: vehicle)
             }
@@ -41,7 +41,7 @@ struct VehicleListView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
-                    .accessibilityLabel("Add Vehicle")
+                    .accessibilityLabel("Araç Ekle")
                 }
             }
             .sheet(isPresented: $viewModel.isShowingAddVehicle) {

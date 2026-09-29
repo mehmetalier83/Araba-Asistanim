@@ -44,7 +44,7 @@ struct AppTextField: View {
                             .foregroundStyle(AppTheme.textSecondary)
                             .frame(width: AppSizes.minTouchTarget, height: AppSizes.minTouchTarget)
                     }
-                    .accessibilityLabel(isSecureTextVisible ? "Hide password" : "Show password")
+                    .accessibilityLabel(isSecureTextVisible ? "Şifreyi gizle" : "Şifreyi göster")
                 }
             }
             .padding(.horizontal, AppSpacing.sm)

@@ -68,3 +68,18 @@ enum AppColors {
         dark: Color(hex: 0xFF6B6B).opacity(0.16)
     )
 }
+
+extension LinearGradient {
+    /// The dark "graphite" surface used for every automotive hero element:
+    /// the Home vehicle card, the Vehicle Detail header, and Welcome. Same
+    /// appearance in both light and dark mode by design — this is a fixed
+    /// brand surface, not a themed background.
+    @MainActor
+    static func graphiteSurface(startPoint: UnitPoint = .topLeading, endPoint: UnitPoint = .bottomTrailing) -> LinearGradient {
+        LinearGradient(
+            colors: [Color(hex: 0x24304A), Color(hex: 0x05070C)],
+            startPoint: startPoint,
+            endPoint: endPoint
+        )
+    }
+}

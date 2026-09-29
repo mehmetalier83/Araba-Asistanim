@@ -12,7 +12,7 @@ final class MockAuthService: AuthServiceProtocol {
 
     private var accounts: [String: StoredAccount] = [
         "demo@carlogai.com": StoredAccount(
-            user: User(id: UUID(), firstName: "Demo", lastName: "Driver", email: "demo@carlogai.com"),
+            user: User(id: UUID(), firstName: "Demo", lastName: "Sürücü", email: "demo@carlogai.com"),
             password: "Password1"
         )
     ]

@@ -10,6 +10,12 @@ struct VehicleHeroCard: View {
     let vehicle: Vehicle
     let action: () -> Void
 
+    /// The engine's leading displacement token (e.g. "2.0L" out of "2.0L Turbo I4"),
+    /// for a compact spec line — the full string is still shown on Vehicle Detail.
+    private var shortEngine: String {
+        vehicle.engine.split(separator: " ").first.map(String.init) ?? vehicle.engine
+    }
+
     var body: some View {
         Button(action: action) {
             ZStack(alignment: .bottomLeading) {
@@ -27,7 +33,7 @@ struct VehicleHeroCard: View {
                             .font(AppTypography.title2)
                             .foregroundStyle(.white)
 
-                        Text(vehicle.year.description)
+                        Text("\(vehicle.year.description) · \(shortEngine) · \(vehicle.fuelType.displayName)")
                             .font(AppTypography.subheadline)
                             .foregroundStyle(.white.opacity(0.7))
                     }
@@ -37,17 +43,21 @@ struct VehicleHeroCard: View {
                             .font(AppTypography.heroValue)
                             .foregroundStyle(.white)
 
-                        Text("Current mileage")
+                        Text("Güncel kilometre")
                             .font(AppTypography.caption)
                             .foregroundStyle(.white.opacity(0.6))
                     }
 
                     HStack(spacing: 4) {
-                        Text("View Vehicle")
+                        Text("Aracı Görüntüle")
                         Image(systemName: "chevron.right")
                     }
-                    .font(AppTypography.subheadline)
+                    .font(AppTypography.subheadline.weight(.medium))
                     .foregroundStyle(.white)
+                    .padding(.horizontal, AppSpacing.sm)
+                    .padding(.vertical, AppSpacing.xs)
+                    .background(.white.opacity(0.16))
+                    .clipShape(Capsule())
                 }
                 .padding(AppSpacing.lg)
             }
@@ -57,18 +67,11 @@ struct VehicleHeroCard: View {
         .appShadow()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(vehicle.displayName), \(vehicle.year.description), \(vehicle.mileageKm.formattedMileage())")
-        .accessibilityHint("View vehicle details")
+        .accessibilityHint("Araç detaylarını gör")
     }
 
     private var backgroundSurface: some View {
-        LinearGradient(
-            colors: [
-                Color(light: Color(hex: 0x24304A), dark: Color(hex: 0x141A26)),
-                Color(light: Color(hex: 0x101624), dark: Color(hex: 0x05070C))
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+        LinearGradient.graphiteSurface()
     }
 }
 

@@ -16,7 +16,7 @@ enum SecureStorageError: LocalizedError {
     case unhandled(OSStatus)
 
     var errorDescription: String? {
-        "Something went wrong. Please try again."
+        "Bir şeyler ters gitti. Lütfen tekrar dene."
     }
 }
 

@@ -14,11 +14,11 @@ struct LoginView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.xl) {
                 VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                    Text("Welcome back")
+                    Text("Tekrar hoş geldin")
                         .font(AppTypography.largeTitle)
                         .foregroundStyle(AppTheme.textPrimary)
 
-                    Text("Sign in to continue tracking your vehicle.")
+                    Text("Aracını takip etmeye devam etmek için giriş yap.")
                         .font(AppTypography.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                 }
@@ -26,8 +26,8 @@ struct LoginView: View {
 
                 VStack(alignment: .leading, spacing: AppSpacing.md) {
                     AppTextField(
-                        title: "Email",
-                        placeholder: "you@example.com",
+                        title: "E-posta",
+                        placeholder: "sen@ornek.com",
                         text: $email,
                         keyboardType: .emailAddress,
                         textContentType: .username,
@@ -36,8 +36,8 @@ struct LoginView: View {
                     .onChange(of: email) { emailError = nil; authViewModel.clearError() }
 
                     AppTextField(
-                        title: "Password",
-                        placeholder: "Password",
+                        title: "Şifre",
+                        placeholder: "Şifre",
                         text: $password,
                         isSecure: true,
                         textContentType: .password,
@@ -45,7 +45,7 @@ struct LoginView: View {
                     )
                     .onChange(of: password) { passwordError = nil; authViewModel.clearError() }
 
-                    Button("Forgot Password?", action: onForgotPassword)
+                    Button("Şifremi Unuttum?", action: onForgotPassword)
                         .font(AppTypography.subheadline)
                         .foregroundStyle(AppTheme.primary)
                 }
@@ -55,25 +55,25 @@ struct LoginView: View {
                 }
 
                 VStack(spacing: AppSpacing.sm) {
-                    PrimaryButton(title: "Sign In", isLoading: authViewModel.isAuthenticating) {
+                    PrimaryButton(title: "Giriş Yap", isLoading: authViewModel.isAuthenticating) {
                         submit()
                     }
 
-                    SecondaryButton(title: "Create Account", action: onCreateAccount)
+                    SecondaryButton(title: "Hesap Oluştur", action: onCreateAccount)
                 }
             }
             .padding(AppSpacing.md)
         }
         .background(AppTheme.background)
-        .navigationTitle("Sign In")
+        .navigationTitle("Giriş Yap")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
     }
 
     private func submit() {
         authViewModel.clearError()
-        emailError = email.isValidEmail ? nil : "Enter a valid email address."
-        passwordError = password.isEmpty ? "Enter your password." : nil
+        emailError = email.isValidEmail ? nil : "Geçerli bir e-posta adresi gir."
+        passwordError = password.isEmpty ? "Şifreni gir." : nil
 
         guard emailError == nil, passwordError == nil else { return }
 

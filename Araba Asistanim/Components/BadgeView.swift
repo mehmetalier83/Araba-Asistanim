@@ -19,7 +19,7 @@ struct BadgeView: View {
         }
         .background(AppTheme.error)
         .clipShape(Capsule())
-        .accessibilityLabel(count.map { "\($0) unread" } ?? "New")
+        .accessibilityLabel(count.map { "\($0) okunmadı" } ?? "Yeni")
     }
 }
 

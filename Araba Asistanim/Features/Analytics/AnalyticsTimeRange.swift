@@ -4,10 +4,10 @@ import Foundation
 /// "All" both show the full range for now — the filter is still fully wired up
 /// so it behaves correctly once real, longer-running data exists.
 enum AnalyticsTimeRange: String, CaseIterable, Identifiable {
-    case oneMonth = "1M"
-    case sixMonths = "6M"
+    case oneMonth = "1A"
+    case sixMonths = "6A"
     case oneYear = "1Y"
-    case all = "All"
+    case all = "Tümü"
 
     var id: String { rawValue }
 

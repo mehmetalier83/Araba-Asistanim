@@ -8,8 +8,8 @@ struct MonthlyExpensesChartView: View {
     var body: some View {
         Chart(data) { point in
             BarMark(
-                x: .value("Month", point.month),
-                y: .value("Expenses", point.value)
+                x: .value("Ay", point.month),
+                y: .value("Giderler", point.value)
             )
             .foregroundStyle(AppTheme.primary)
             .annotation(position: .top) {
@@ -24,7 +24,7 @@ struct MonthlyExpensesChartView: View {
         }
         .environment(\.locale, Locale(identifier: "en_US"))
         .frame(height: 180)
-        .accessibilityLabel("Monthly expenses chart")
+        .accessibilityLabel("Aylık giderler grafiği")
         .accessibilityValue(accessibilitySummary)
     }
 

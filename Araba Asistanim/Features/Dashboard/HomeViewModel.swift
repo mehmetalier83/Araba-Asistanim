@@ -6,11 +6,19 @@ import Foundation
 @MainActor
 final class HomeViewModel: ObservableObject {
     @Published private(set) var vehicle: Vehicle
-    @Published private(set) var healthRows: [VehicleHealthCard.Row]
     @Published private(set) var nextMaintenanceItem: MaintenanceRecord?
+    @Published private(set) var nextServiceRemainingKm: Int
     @Published private(set) var recentActivity: [ExpenseRecord]
     @Published private(set) var aiInsightMessage: String
     @Published private(set) var aiInsightDetail: String
+
+    let fuelConsumptionText: String
+    let fuelConsumptionChangePercent: Double
+    let fuelHistory: [MonthlyValue]
+
+    let monthlyExpensesText: String
+    let monthlyExpensesChangePercent: Double
+    let expenseBreakdown: [(category: ExpenseCategory, total: Double)]
 
     @Published var activeQuickAction: QuickActionType?
     @Published var isShowingInsightDetail = false
@@ -31,36 +39,18 @@ final class HomeViewModel: ObservableObject {
 
         self.vehicle = vehicle
         self.nextMaintenanceItem = nextMaintenanceItem
+        self.nextServiceRemainingKm = (nextMaintenanceItem?.mileageKm ?? 0) - vehicle.mileageKm
         self.recentActivity = recentActivity ?? PreviewData.recentActivity
         self.aiInsightMessage = aiInsightMessage ?? PreviewData.aiInsightMessage
         self.aiInsightDetail = aiInsightDetail ?? PreviewData.aiInsightDetail
 
-        let remainingKm = (nextMaintenanceItem?.mileageKm ?? 0) - vehicle.mileageKm
-        let nextServiceTag: (text: String, tone: TagView.Tone)?
-        switch nextMaintenanceItem?.status {
-        case .overdue: nextServiceTag = ("Overdue", .danger)
-        case .dueSoon: nextServiceTag = ("Due Soon", .warning)
-        default: nextServiceTag = nil
-        }
+        self.fuelConsumptionText = PreviewData.fuelConsumptionValue.formattedFuelConsumption()
+        self.fuelConsumptionChangePercent = PreviewData.fuelConsumptionChangePercent
+        self.fuelHistory = PreviewData.monthlyFuelConsumption
 
-        self.healthRows = [
-            .init(
-                systemImage: "fuelpump.fill",
-                title: "Fuel Consumption",
-                value: PreviewData.fuelConsumptionValue.formattedFuelConsumption()
-            ),
-            .init(
-                systemImage: "banknote.fill",
-                title: "Monthly Expenses",
-                value: PreviewData.monthlyExpensesValue.formattedCurrencyTL()
-            ),
-            .init(
-                systemImage: "wrench.and.screwdriver.fill",
-                title: "Next Service",
-                value: remainingKm > 0 ? "\(remainingKm.formattedMileage())" : abs(remainingKm).formattedMileage(),
-                tag: nextServiceTag
-            )
-        ]
+        self.monthlyExpensesText = PreviewData.monthlyExpensesValue.formattedCurrencyTL()
+        self.monthlyExpensesChangePercent = PreviewData.monthlyExpensesChangePercent
+        self.expenseBreakdown = PreviewData.expenseBreakdown
     }
 
     func selectQuickAction(_ action: QuickActionType) {

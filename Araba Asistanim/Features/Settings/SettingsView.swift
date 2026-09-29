@@ -11,34 +11,35 @@ struct SettingsView: View {
     @State private var isShowingLogoutConfirmation = false
 
     private let preferenceRows = [
-        Row(title: "Appearance", systemImage: "circle.lefthalf.filled"),
-        Row(title: "Notifications", systemImage: "bell.fill"),
-        Row(title: "Units", systemImage: "ruler.fill"),
-        Row(title: "Currency", systemImage: "banknote.fill")
+        Row(title: "Görünüm", systemImage: "circle.lefthalf.filled"),
+        Row(title: "Bildirimler", systemImage: "bell.fill"),
+        Row(title: "Birimler", systemImage: "ruler.fill"),
+        Row(title: "Para Birimi", systemImage: "banknote.fill")
     ]
 
     private let aboutRows = [
-        Row(title: "About CarLog AI", systemImage: "info.circle.fill"),
-        Row(title: "Privacy Policy", systemImage: "hand.raised.fill"),
-        Row(title: "Terms of Service", systemImage: "doc.text.fill")
+        Row(title: "CarLog AI Hakkında", systemImage: "info.circle.fill"),
+        Row(title: "Gizlilik Politikası", systemImage: "hand.raised.fill"),
+        Row(title: "Kullanım Koşulları", systemImage: "doc.text.fill")
     ]
 
     var body: some View {
         List {
             if let user = authViewModel.currentUser {
-                Section("Account") {
+                Section("Hesap") {
                     accountHeader(for: user)
-                    SettingsRowView(row: Row(title: "Email", systemImage: "envelope.fill"), value: user.email)
+                    SettingsRowView(row: Row(title: "E-posta", systemImage: "envelope.fill"), value: user.email)
                 }
             }
 
-            Section("Preferences") {
+            Section("Tercihler") {
+                SettingsRowView(row: Row(title: "Dil", systemImage: "globe"), value: "Türkçe")
                 ForEach(preferenceRows) { row in
                     SettingsRowView(row: row)
                 }
             }
 
-            Section("About") {
+            Section("Hakkında") {
                 ForEach(aboutRows) { row in
                     SettingsRowView(row: row)
                 }
@@ -48,23 +49,26 @@ struct SettingsView: View {
                 Button(role: .destructive) {
                     isShowingLogoutConfirmation = true
                 } label: {
-                    Text("Log Out")
-                        .font(AppTypography.body)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                    HStack {
+                        Spacer()
+                        Text("Çıkış Yap")
+                            .font(AppTypography.bodyEmphasized)
+                        Spacer()
+                    }
                 }
             }
         }
-        .navigationTitle("Settings")
+        .navigationTitle("Ayarlar")
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
-            "Are you sure you want to log out?",
+            "Çıkış yapmak istediğine emin misin?",
             isPresented: $isShowingLogoutConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Log Out", role: .destructive) {
+            Button("Çıkış Yap", role: .destructive) {
                 authViewModel.signOut()
             }
-            Button("Cancel", role: .cancel) {}
+            Button("Vazgeç", role: .cancel) {}
         }
     }
 
@@ -91,23 +95,28 @@ struct SettingsView: View {
         var value: String? = nil
 
         var body: some View {
-            Label {
-                HStack {
-                    Text(row.title)
-                        .font(AppTypography.body)
-                        .foregroundStyle(AppTheme.textPrimary)
-
-                    if let value {
-                        Spacer()
-                        Text(value)
-                            .font(AppTypography.subheadline)
-                            .foregroundStyle(AppTheme.textSecondary)
-                    }
-                }
-            } icon: {
+            HStack(spacing: AppSpacing.sm) {
                 Image(systemName: row.systemImage)
+                    .font(.system(size: AppSizes.iconXSmall))
                     .foregroundStyle(AppTheme.primary)
+                    .frame(width: 28, height: 28)
+                    .background(AppTheme.primarySubtle)
+                    .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.small, style: .continuous))
+                    .accessibilityHidden(true)
+
+                Text(row.title)
+                    .font(AppTypography.body)
+                    .foregroundStyle(AppTheme.textPrimary)
+
+                if let value {
+                    Spacer()
+                    Text(value)
+                        .font(AppTypography.subheadline)
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
             }
+            .padding(.vertical, AppSpacing.xxs)
+            .accessibilityElement(children: .combine)
             .accessibilityLabel(value.map { "\(row.title): \($0)" } ?? row.title)
         }
     }

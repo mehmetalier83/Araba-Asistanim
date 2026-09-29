@@ -18,7 +18,7 @@ enum PreviewData {
             mileageKm: 120_450,
             fuelType: .gasoline,
             engine: "2.0L Turbo I4",
-            transmission: "8-Speed Automatic"
+            transmission: "8 İleri Otomatik"
         ),
         Vehicle(
             make: "Toyota",
@@ -26,8 +26,8 @@ enum PreviewData {
             year: 2021,
             mileageKm: 65_200,
             fuelType: .hybrid,
-            engine: "1.8L Hybrid",
-            transmission: "CVT Automatic"
+            engine: "1.8L Hibrit",
+            transmission: "CVT Otomatik"
         )
     ]
 
@@ -38,7 +38,7 @@ enum PreviewData {
 
     static let maintenanceRecords: [MaintenanceRecord] = [
         MaintenanceRecord(
-            title: "Tire Rotation",
+            title: "Lastik Rotasyonu",
             category: .tireRotation,
             status: .overdue,
             date: date(2026, 9, 1),
@@ -46,7 +46,7 @@ enum PreviewData {
             cost: nil
         ),
         MaintenanceRecord(
-            title: "Oil Change",
+            title: "Yağ Değişimi",
             category: .oilChange,
             status: .dueSoon,
             date: date(2026, 10, 15),
@@ -54,7 +54,7 @@ enum PreviewData {
             cost: nil
         ),
         MaintenanceRecord(
-            title: "Oil Change",
+            title: "Yağ Değişimi",
             category: .oilChange,
             status: .completed,
             date: date(2026, 8, 12),
@@ -62,7 +62,7 @@ enum PreviewData {
             cost: 7_450
         ),
         MaintenanceRecord(
-            title: "Brake Inspection",
+            title: "Fren Kontrolü",
             category: .brakeInspection,
             status: .completed,
             date: date(2026, 4, 5),
@@ -70,7 +70,7 @@ enum PreviewData {
             cost: 4_800
         ),
         MaintenanceRecord(
-            title: "Battery Replacement",
+            title: "Akü Değişimi",
             category: .batteryReplacement,
             status: .completed,
             date: date(2026, 1, 10),
@@ -87,9 +87,9 @@ enum PreviewData {
     // MARK: - Recent activity (Home)
 
     static let recentActivity: [ExpenseRecord] = [
-        ExpenseRecord(title: "Oil Change", category: .maintenance, amount: 7_450, date: date(2026, 8, 12)),
-        ExpenseRecord(title: "Fuel", category: .fuel, amount: 2_350, date: date(2026, 9, 18)),
-        ExpenseRecord(title: "Brake Inspection", category: .maintenance, amount: 4_800, date: date(2026, 4, 5))
+        ExpenseRecord(title: "Yağ Değişimi", category: .maintenance, amount: 7_450, date: date(2026, 8, 12)),
+        ExpenseRecord(title: "Yakıt", category: .fuel, amount: 2_350, date: date(2026, 9, 18)),
+        ExpenseRecord(title: "Fren Kontrolü", category: .maintenance, amount: 4_800, date: date(2026, 4, 5))
     ]
 
     // MARK: - Fuel records
@@ -107,75 +107,83 @@ enum PreviewData {
     static let totalExpensesValue: Double = 82_750
     static let costPerKmValue: Double = 0.68
 
+    /// Change vs. the previous month. Negative means improved (used lower);
+    /// positive means increased. Both fuel and expenses read "lower is better".
+    static let fuelConsumptionChangePercent: Double = -12
+    static let monthlyExpensesChangePercent: Double = 8
+
+    /// This month's spending broken down by category — a richer, standalone
+    /// dataset (not just the 3 items shown in Recent Activity), used by the
+    /// Home mini chart and the Analytics category chart alike.
+    static let expenseBreakdown: [(category: ExpenseCategory, total: Double)] = [
+        (.fuel, 3_200),
+        (.maintenance, 2_150),
+        (.insurance, 1_200),
+        (.other, 1_300)
+    ]
+
     // MARK: - AI insight (Home)
 
-    static let aiInsightMessage = "Your fuel consumption increased by 8% compared with last month."
+    static let aiInsightMessage = "Yakıt tüketimin geçen aya göre %8 arttı."
     static let aiInsightDetail = """
-    Based on your last two fuel entries, average consumption rose from 7.2 L/100 km \
-    in July to 7.8 L/100 km in August — an increase of about 8%. This can be caused by \
-    short trips, city driving, tire pressure, or upcoming maintenance needs.
+    Son iki yakıt kaydına göre ortalama tüketim Temmuz'da 7.2 L/100 km iken \
+    Ağustos'ta 7.8 L/100 km'ye çıktı — yaklaşık %8'lik bir artış. Bunun nedeni \
+    kısa mesafeler, şehir içi sürüş, lastik basıncı veya yaklaşan bakım ihtiyaçları olabilir.
     """
 
     // MARK: - Analytics
 
     static let monthlyExpenses: [MonthlyValue] = [
-        MonthlyValue(month: "Jan", value: 4_500),
-        MonthlyValue(month: "Feb", value: 6_200),
+        MonthlyValue(month: "Oca", value: 4_500),
+        MonthlyValue(month: "Şub", value: 6_200),
         MonthlyValue(month: "Mar", value: 3_800),
-        MonthlyValue(month: "Apr", value: 8_400),
+        MonthlyValue(month: "Nis", value: 8_400),
         MonthlyValue(month: "May", value: 5_600),
-        MonthlyValue(month: "Jun", value: 7_850)
+        MonthlyValue(month: "Haz", value: 7_850)
     ]
 
     static let monthlyFuelConsumption: [MonthlyValue] = [
-        MonthlyValue(month: "Jan", value: 7.2),
-        MonthlyValue(month: "Feb", value: 7.5),
+        MonthlyValue(month: "Oca", value: 7.2),
+        MonthlyValue(month: "Şub", value: 7.5),
         MonthlyValue(month: "Mar", value: 7.1),
-        MonthlyValue(month: "Apr", value: 7.8),
+        MonthlyValue(month: "Nis", value: 7.8),
         MonthlyValue(month: "May", value: 7.6),
-        MonthlyValue(month: "Jun", value: 7.8)
+        MonthlyValue(month: "Haz", value: 7.8)
     ]
 
     static let analyticsSummary: [Statistic] = [
-        Statistic(title: "Monthly Spending", value: monthlyExpensesValue.formattedCurrencyTL(), systemImage: "banknote.fill"),
-        Statistic(title: "Avg. Fuel Consumption", value: fuelConsumptionValue.formattedFuelConsumption(), systemImage: "fuelpump.fill"),
-        Statistic(title: "Cost per Kilometer", value: costPerKmValue.formattedCostPerKm(), systemImage: "road.lanes")
+        Statistic(title: "Aylık Harcama", value: monthlyExpensesValue.formattedCurrencyTL(), systemImage: "banknote.fill"),
+        Statistic(title: "Ort. Yakıt Tüketimi", value: fuelConsumptionValue.formattedFuelConsumption(), systemImage: "fuelpump.fill"),
+        Statistic(title: "Kilometre Başı Maliyet", value: costPerKmValue.formattedCostPerKm(), systemImage: "road.lanes")
     ]
-
-    /// Spending grouped by category, for the Analytics "where is my money going" chart.
-    static var spendingByCategory: [(category: ExpenseCategory, total: Double)] {
-        let grouped = Dictionary(grouping: recentActivity, by: \.category)
-        return grouped.map { (category: $0.key, total: $0.value.reduce(0) { $0 + $1.amount }) }
-            .sorted { $0.total > $1.total }
-    }
 
     // MARK: - AI Assistant chat
 
     static let initialAssistantMessage = ChatMessage(
         role: .assistant,
-        text: "Hello! I can help you understand your vehicle records and expenses."
+        text: "Merhaba! Araç kayıtlarını ve giderlerini anlamana yardımcı olabilirim."
     )
 
     static let suggestedQuestions: [String] = [
-        "How much did I spend this year?",
-        "Is my fuel consumption changing?",
-        "What maintenance is coming up?",
-        "Prepare a service summary."
+        "Bu yıl ne kadar harcadım?",
+        "Yakıt tüketimim değişiyor mu?",
+        "Hangi bakımlar yaklaşıyor?",
+        "Bir servis özeti hazırla."
     ]
 
     /// Canned assistant replies keyed by suggested question text.
     static let mockAssistantResponses: [String: String] = [
-        "How much did I spend this year?":
-            "Based on your records, you've spent approximately 82,750 TL so far this year across fuel, maintenance, and other expenses.",
-        "Is my fuel consumption changing?":
-            "Yes — it rose from 7.2 L/100 km in January to 7.8 L/100 km in June, an increase of about 8%. Short trips and city driving are common causes.",
-        "What maintenance is coming up?":
-            "A tire rotation is overdue, and an oil change is due soon at around 123,000 km.",
-        "Prepare a service summary.":
-            "Since January, your BMW 320i has had an oil change, a brake inspection, and a battery replacement, totaling 15,450 TL in maintenance costs."
+        "Bu yıl ne kadar harcadım?":
+            "Kayıtlarına göre bu yıl yakıt, bakım ve diğer giderler dahil yaklaşık 82,750 TL harcadın.",
+        "Yakıt tüketimim değişiyor mu?":
+            "Evet — Ocak'ta 7.2 L/100 km olan tüketim Haziran'da 7.8 L/100 km'ye çıktı, yaklaşık %8'lik bir artış. Kısa mesafeler ve şehir içi sürüş yaygın nedenlerdir.",
+        "Hangi bakımlar yaklaşıyor?":
+            "Lastik rotasyonu gecikti, yağ değişimi ise yaklaşık 123,000 km'de yaklaşıyor.",
+        "Bir servis özeti hazırla.":
+            "Ocak ayından bu yana BMW 320i'nde bir yağ değişimi, bir fren kontrolü ve bir akü değişimi yapıldı; toplam bakım maliyeti 15,450 TL."
     ]
 
-    static let aiDisclaimer = "AI-generated information does not replace professional mechanical inspection."
+    static let aiDisclaimer = "Yapay zeka tarafından üretilen bilgiler, profesyonel mekanik kontrolün yerini tutmaz."
 
     // MARK: - Helpers
 

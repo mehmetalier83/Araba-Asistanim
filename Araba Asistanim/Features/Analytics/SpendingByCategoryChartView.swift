@@ -12,29 +12,29 @@ struct SpendingByCategoryChartView: View {
         if data.isEmpty {
             EmptyStateView(
                 systemImage: "chart.pie",
-                title: "No expenses yet",
-                message: "Spending by category will appear here once you log expenses."
+                title: "Henüz gider yok",
+                message: "Gider eklediğinde kategoriye göre dağılım burada görünecek."
             )
         } else {
             HStack(spacing: AppSpacing.lg) {
                 Chart(data, id: \.category) { entry in
                     SectorMark(
-                        angle: .value("Amount", entry.total),
+                        angle: .value("Tutar", entry.total),
                         innerRadius: .ratio(0.65),
                         angularInset: 1.5
                     )
-                    .foregroundStyle(color(for: entry.category))
+                    .foregroundStyle(entry.category.tintColor)
                     .cornerRadius(3)
                 }
                 .frame(width: 120, height: 120)
-                .accessibilityLabel("Spending by category")
+                .accessibilityLabel("Kategoriye göre giderler")
                 .accessibilityValue(accessibilitySummary)
 
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     ForEach(data, id: \.category) { entry in
                         HStack(spacing: AppSpacing.xs) {
                             Circle()
-                                .fill(color(for: entry.category))
+                                .fill(entry.category.tintColor)
                                 .frame(width: 8, height: 8)
                                 .accessibilityHidden(true)
 
@@ -57,33 +57,15 @@ struct SpendingByCategoryChartView: View {
     private var accessibilitySummary: String {
         data.map { "\($0.category.displayName): \($0.total.formattedCurrencyTL())" }.joined(separator: ", ")
     }
-
-    private func color(for category: ExpenseCategory) -> Color {
-        switch category {
-        case .maintenance: return AppTheme.primary
-        case .fuel: return AppTheme.warning
-        case .other: return AppTheme.success
-        }
-    }
-}
-
-private extension ExpenseCategory {
-    var displayName: String {
-        switch self {
-        case .maintenance: return "Maintenance"
-        case .fuel: return "Fuel"
-        case .other: return "Other"
-        }
-    }
 }
 
 #Preview {
-    SpendingByCategoryChartView(data: PreviewData.spendingByCategory)
+    SpendingByCategoryChartView(data: PreviewData.expenseBreakdown)
         .padding()
 }
 
 #Preview("Dark") {
-    SpendingByCategoryChartView(data: PreviewData.spendingByCategory)
+    SpendingByCategoryChartView(data: PreviewData.expenseBreakdown)
         .padding()
         .preferredColorScheme(.dark)
 }

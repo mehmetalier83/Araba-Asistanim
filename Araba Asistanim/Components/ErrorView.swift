@@ -26,7 +26,7 @@ struct ErrorView: View {
 struct FullScreenErrorView: View {
     let title: String
     let message: String
-    var retryTitle: String = "Try Again"
+    var retryTitle: String = "Tekrar Dene"
     var onRetry: (() -> Void)? = nil
 
     var body: some View {

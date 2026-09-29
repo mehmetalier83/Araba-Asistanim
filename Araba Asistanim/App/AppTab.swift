@@ -12,11 +12,11 @@ enum AppTab: String, CaseIterable, Hashable, Identifiable {
 
     var title: String {
         switch self {
-        case .home: return "Home"
-        case .vehicles: return "Vehicles"
-        case .maintenance: return "Maintenance"
-        case .analytics: return "Analytics"
-        case .aiAssistant: return "AI Assistant"
+        case .home: return "Ana Sayfa"
+        case .vehicles: return "Araçlar"
+        case .maintenance: return "Bakım"
+        case .analytics: return "Analiz"
+        case .aiAssistant: return "AI Asistan"
         }
     }
 

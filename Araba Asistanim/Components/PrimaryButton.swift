@@ -37,7 +37,7 @@ struct PrimaryButton: View {
         .opacity(isEnabled ? 1 : 0.5)
         .accessibilityLabel(title)
         .accessibilityAddTraits(isLoading ? [] : .isButton)
-        .accessibilityValue(isLoading ? "Loading" : "")
+        .accessibilityValue(isLoading ? "Yükleniyor" : "")
     }
 }
 

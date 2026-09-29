@@ -14,9 +14,9 @@ struct MaintenanceView: View {
                 if records.isEmpty {
                     EmptyStateView(
                         systemImage: "wrench.and.screwdriver.fill",
-                        title: "No maintenance records yet",
-                        message: "Keep track of your services to build your vehicle history.",
-                        actionTitle: "Add Maintenance"
+                        title: "Henüz bakım kaydı yok",
+                        message: "Araç geçmişini oluşturmak için servislerini takip et.",
+                        actionTitle: "Bakım Ekle"
                     ) {
                         isShowingAddMaintenance = true
                     }
@@ -24,13 +24,13 @@ struct MaintenanceView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: AppSpacing.xl) {
                             if !overdue.isEmpty {
-                                section(title: "Overdue", records: overdue)
+                                section(title: "Gecikenler", records: overdue)
                             }
                             if !dueSoon.isEmpty {
-                                section(title: "Due Soon", records: dueSoon)
+                                section(title: "Yaklaşanlar", records: dueSoon)
                             }
                             if !completed.isEmpty {
-                                section(title: "History", records: completed)
+                                section(title: "Geçmiş", records: completed)
                             }
                         }
                         .padding(AppSpacing.md)
@@ -38,21 +38,21 @@ struct MaintenanceView: View {
                 }
             }
             .background(AppTheme.groupedBackground)
-            .navigationTitle("Maintenance")
+            .navigationTitle("Bakım")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         isShowingAddMaintenance = true
                     } label: {
-                        Label("Add Maintenance", systemImage: "plus")
+                        Label("Bakım Ekle", systemImage: "plus")
                     }
                 }
             }
             .sheet(isPresented: $isShowingAddMaintenance) {
                 PlaceholderSheet(
                     systemImage: "wrench.and.screwdriver.fill",
-                    title: "Add Maintenance",
-                    message: "Maintenance record creation isn't implemented yet. This will be available once the data layer is built."
+                    title: "Bakım Ekle",
+                    message: "Bakım kaydı oluşturma özelliği henüz eklenmedi. Veri katmanı tamamlandığında kullanılabilir olacak."
                 )
             }
         }

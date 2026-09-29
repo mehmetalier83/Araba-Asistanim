@@ -22,7 +22,7 @@ struct AIAssistantView: View {
                                 if viewModel.isAssistantTyping {
                                     HStack {
                                         ProgressView()
-                                        Text("Thinking…")
+                                        Text("Düşünüyor…")
                                             .font(AppTypography.caption)
                                             .foregroundStyle(AppTheme.textSecondary)
                                         Spacer()
@@ -52,20 +52,20 @@ struct AIAssistantView: View {
                     .padding(AppSpacing.md)
             }
             .background(AppTheme.background)
-            .navigationTitle("AI Vehicle Assistant")
+            .navigationTitle("AI Araç Asistanı")
             .navigationBarTitleDisplayMode(.inline)
         }
     }
 
     private var header: some View {
-        Text("Ask questions about your vehicle.")
+        Text("Aracın hakkında soru sor.")
             .font(AppTypography.subheadline)
             .foregroundStyle(AppTheme.textSecondary)
     }
 
     private var suggestedQuestions: some View {
         VStack(alignment: .leading, spacing: AppSpacing.xs) {
-            Text("Try asking")
+            Text("Şunları sorabilirsin")
                 .font(AppTypography.caption)
                 .foregroundStyle(AppTheme.textSecondary)
 

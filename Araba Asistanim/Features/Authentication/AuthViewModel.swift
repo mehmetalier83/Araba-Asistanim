@@ -11,7 +11,14 @@ final class AuthViewModel: ObservableObject {
 
     init(repository: AuthRepository) {
         self.repository = repository
-        if let session = repository.restoreSession(), !session.token.isExpired {
+        // A device that has ever signed in stays signed in — only a fresh
+        // install (no persisted session) should see the Welcome/Login flow.
+        // We deliberately don't gate this on access-token expiry: with a real
+        // backend an expired access token is silently renewed from the
+        // refresh token, never bouncing the user back to login. MockAuthService
+        // doesn't implement that refresh call yet, so for now a persisted
+        // session is treated as valid until the user explicitly logs out.
+        if let session = repository.restoreSession() {
             state = .authenticated(session.user)
         } else {
             state = .unauthenticated
@@ -77,6 +84,6 @@ final class AuthViewModel: ObservableObject {
     }
 
     private static func message(for error: Error) -> String {
-        (error as? AuthError)?.errorDescription ?? AuthError.unknown.errorDescription ?? "Something went wrong."
+        (error as? AuthError)?.errorDescription ?? AuthError.unknown.errorDescription ?? "Bir şeyler ters gitti."
     }
 }

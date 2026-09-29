@@ -12,9 +12,9 @@ enum PasswordRequirement: CaseIterable, Identifiable {
 
     var description: String {
         switch self {
-        case .minLength: return "8+ characters"
-        case .uppercase: return "One uppercase letter"
-        case .number: return "One number"
+        case .minLength: return "En az 8 karakter"
+        case .uppercase: return "Bir büyük harf"
+        case .number: return "Bir rakam"
         }
     }
 

@@ -27,7 +27,7 @@ final class AIAssistantViewModel: ObservableObject {
     func askSuggestedQuestion(_ question: String) {
         messages.append(ChatMessage(role: .user, text: question))
 
-        let response = mockResponses[question] ?? "I don't have an answer for that yet."
+        let response = mockResponses[question] ?? "Bu konuda henüz bir cevabım yok."
         isAssistantTyping = true
 
         Task {

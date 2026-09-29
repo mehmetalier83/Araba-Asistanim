@@ -5,7 +5,7 @@ struct AnalyticsView: View {
 
     private let monthlyExpenses = PreviewData.monthlyExpenses
     private let monthlyFuelConsumption = PreviewData.monthlyFuelConsumption
-    private let spendingByCategory = PreviewData.spendingByCategory
+    private let expenseBreakdown = PreviewData.expenseBreakdown
     private let summary = PreviewData.analyticsSummary
 
     private let summaryColumns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
@@ -22,27 +22,27 @@ struct AnalyticsView: View {
                         }
                     }
 
-                    chartSection(title: "Monthly Expenses", subtitle: "How much am I spending?") {
+                    chartSection(title: "Aylık Giderler", subtitle: "Ne kadar harcıyorum?") {
                         MonthlyExpensesChartView(data: timeRange.filter(monthlyExpenses))
                     }
 
-                    chartSection(title: "Fuel Consumption", subtitle: "How is consumption changing?") {
+                    chartSection(title: "Yakıt Tüketimi", subtitle: "Tüketim nasıl değişiyor?") {
                         FuelConsumptionChartView(data: timeRange.filter(monthlyFuelConsumption))
                     }
 
-                    chartSection(title: "Spending by Category", subtitle: "Where is my money going?") {
-                        SpendingByCategoryChartView(data: spendingByCategory)
+                    chartSection(title: "Kategoriye Göre Giderler", subtitle: "Param nereye gidiyor?") {
+                        SpendingByCategoryChartView(data: expenseBreakdown)
                     }
                 }
                 .padding(AppSpacing.md)
             }
             .background(AppTheme.groupedBackground)
-            .navigationTitle("Analytics")
+            .navigationTitle("Analiz")
         }
     }
 
     private var timeRangePicker: some View {
-        Picker("Time Range", selection: $timeRange.animation(AppAnimation.fast)) {
+        Picker("Zaman Aralığı", selection: $timeRange.animation(AppAnimation.fast)) {
             ForEach(AnalyticsTimeRange.allCases) { range in
                 Text(range.rawValue).tag(range)
             }

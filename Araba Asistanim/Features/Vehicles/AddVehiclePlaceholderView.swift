@@ -5,8 +5,8 @@ struct AddVehiclePlaceholderView: View {
     var body: some View {
         PlaceholderSheet(
             systemImage: "car.badge.plus",
-            title: "Add Vehicle",
-            message: "Adding a new vehicle isn't implemented yet. This will be available once the data layer is built."
+            title: "Araç Ekle",
+            message: "Yeni araç ekleme özelliği henüz eklenmedi. Veri katmanı tamamlandığında kullanılabilir olacak."
         )
     }
 }

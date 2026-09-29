@@ -37,9 +37,9 @@ enum MaintenanceStatus: Hashable {
 
     var label: String {
         switch self {
-        case .completed: return "Completed"
-        case .dueSoon: return "Due Soon"
-        case .overdue: return "Overdue"
+        case .completed: return "Tamamlandı"
+        case .dueSoon: return "Yaklaşıyor"
+        case .overdue: return "Gecikti"
         }
     }
 

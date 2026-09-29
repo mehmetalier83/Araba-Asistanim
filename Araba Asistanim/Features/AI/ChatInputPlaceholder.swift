@@ -8,18 +8,18 @@ struct ChatInputPlaceholder: View {
 
     var body: some View {
         HStack(spacing: AppSpacing.sm) {
-            TextField("Ask about your vehicle...", text: $text)
+            TextField("Aracın hakkında sor...", text: $text)
                 .font(AppTypography.body)
                 .padding(.horizontal, AppSpacing.sm)
                 .padding(.vertical, AppSpacing.xs)
                 .background(AppTheme.secondaryBackground)
                 .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.pill, style: .continuous))
-                .accessibilityLabel("Message input")
+                .accessibilityLabel("Mesaj girişi")
 
             Image(systemName: "arrow.up.circle.fill")
                 .font(.system(size: AppSizes.iconLarge))
                 .foregroundStyle(isSendDisabled ? AppTheme.textSecondary : AppTheme.primary)
-                .accessibilityLabel("Send")
+                .accessibilityLabel("Gönder")
                 .accessibilityHidden(true)
         }
     }
