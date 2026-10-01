@@ -31,4 +31,9 @@ enum AppTheme {
     static let warningSubtle = AppColors.warningSubtle
     static let error = AppColors.danger
     static let errorSubtle = AppColors.dangerSubtle
+
+    /// Extra accents used only by the expense-category palette (see
+    /// `ExpenseCategory.tintColor`) — not general-purpose semantic roles.
+    static let categoryTeal = AppColors.categoryTeal
+    static let categoryPurple = AppColors.categoryPurple
 }

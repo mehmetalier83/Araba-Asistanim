@@ -19,6 +19,7 @@ final class AuthViewModel: ObservableObject {
         // doesn't implement that refresh call yet, so for now a persisted
         // session is treated as valid until the user explicitly logs out.
         if let session = repository.restoreSession() {
+            AppSession.update(for: session.user)
             state = .authenticated(session.user)
         } else {
             state = .unauthenticated
@@ -41,26 +42,54 @@ final class AuthViewModel: ObservableObject {
         state = .authenticating
         do {
             let user = try await repository.signIn(email: email, password: password)
-            state = .authenticated(user)
-            HapticFeedback.success()
+            authenticate(as: user)
         } catch {
             state = .error(Self.message(for: error))
             HapticFeedback.error()
         }
     }
 
-    func signUp(firstName: String, lastName: String, email: String, password: String) async {
+    func signUp(email: String, password: String) async {
         state = .authenticating
         do {
-            let user = try await repository.signUp(
-                firstName: firstName, lastName: lastName, email: email, password: password
-            )
-            state = .authenticated(user)
-            HapticFeedback.success()
+            let user = try await repository.signUp(email: email, password: password)
+            authenticate(as: user)
         } catch {
             state = .error(Self.message(for: error))
             HapticFeedback.error()
         }
+    }
+
+    func signInWithGoogle() async {
+        state = .authenticating
+        do {
+            let user = try await repository.signInWithGoogle()
+            authenticate(as: user)
+        } catch {
+            state = .error(Self.message(for: error))
+            HapticFeedback.error()
+        }
+    }
+
+    func signInWithApple() async {
+        state = .authenticating
+        do {
+            let user = try await repository.signInWithApple()
+            authenticate(as: user)
+        } catch {
+            state = .error(Self.message(for: error))
+            HapticFeedback.error()
+        }
+    }
+
+    /// Sets the demo-vs-empty data flag before publishing `.authenticated`,
+    /// so every tab's view models see the correct flag the first time they're
+    /// constructed (which happens as soon as `AppRootView` switches to
+    /// `MainTabView` in response to this state change).
+    private func authenticate(as user: User) {
+        AppSession.update(for: user)
+        state = .authenticated(user)
+        HapticFeedback.success()
     }
 
     /// Forgot Password doesn't change session state — it's a side action, not

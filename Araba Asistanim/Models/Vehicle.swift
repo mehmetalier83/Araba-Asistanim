@@ -48,4 +48,13 @@ enum FuelType: String, CaseIterable, Hashable {
         case .electric: return "Elektrikli"
         }
     }
+
+    var icon: String {
+        switch self {
+        case .gasoline: return "fuelpump.fill"
+        case .diesel: return "fuelpump.fill"
+        case .hybrid: return "bolt.fill"
+        case .electric: return "powerplug.fill"
+        }
+    }
 }

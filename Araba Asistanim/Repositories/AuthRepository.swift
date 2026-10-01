@@ -54,10 +54,20 @@ final class AuthRepository {
         return user
     }
 
-    func signUp(firstName: String, lastName: String, email: String, password: String) async throws -> User {
-        let (user, token) = try await service.signUp(
-            firstName: firstName, lastName: lastName, email: email, password: password
-        )
+    func signUp(email: String, password: String) async throws -> User {
+        let (user, token) = try await service.signUp(email: email, password: password)
+        try persist(user: user, token: token)
+        return user
+    }
+
+    func signInWithGoogle() async throws -> User {
+        let (user, token) = try await service.signInWithGoogle()
+        try persist(user: user, token: token)
+        return user
+    }
+
+    func signInWithApple() async throws -> User {
+        let (user, token) = try await service.signInWithApple()
         try persist(user: user, token: token)
         return user
     }

@@ -1,8 +1,24 @@
 import SwiftUI
 
 /// A temporary vehicle detail screen. All fields are mock data in this phase.
+/// `onDelete` is only supplied when reached from the Vehicles tab (where the
+/// owning list can actually remove it) — Home's shortcut push leaves it nil,
+/// so no delete affordance appears there.
 struct VehicleDetailView: View {
     let vehicle: Vehicle
+    var onDelete: (() -> Void)? = nil
+
+    @StateObject private var expensesViewModel: ExpensesViewModel
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isShowingDeleteConfirmation = false
+    @State private var isShowingAddExpense = false
+
+    init(vehicle: Vehicle, onDelete: (() -> Void)? = nil) {
+        self.vehicle = vehicle
+        self.onDelete = onDelete
+        _expensesViewModel = StateObject(wrappedValue: ExpensesViewModel(vehicle: vehicle))
+    }
 
     private struct Row: Identifiable {
         let id = UUID()
@@ -62,6 +78,8 @@ struct VehicleDetailView: View {
                         }
                     }
                 }
+
+                expensesSection
             }
             .padding(.horizontal, AppSpacing.md)
             .padding(.bottom, AppSpacing.xl)
@@ -69,6 +87,111 @@ struct VehicleDetailView: View {
         .background(AppTheme.groupedBackground)
         .navigationTitle(vehicle.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isShowingAddExpense) {
+            AddExpenseView(vehicle: vehicle) { expense in
+                withAnimation(reduceMotion ? nil : AppAnimation.standard) {
+                    expensesViewModel.addExpense(expense)
+                }
+            }
+        }
+        .toolbar {
+            if onDelete != nil {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(role: .destructive) {
+                        isShowingDeleteConfirmation = true
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .accessibilityLabel("Aracı Sil")
+                }
+            }
+        }
+        .confirmationDialog(
+            "\(vehicle.displayName) silinsin mi?",
+            isPresented: $isShowingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Aracı Sil", role: .destructive) {
+                onDelete?()
+                HapticFeedback.success()
+                dismiss()
+            }
+            Button("Vazgeç", role: .cancel) {}
+        } message: {
+            Text("Bu işlem geri alınamaz.")
+        }
+    }
+
+    // MARK: - Expenses
+
+    private var expensesSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            HStack {
+                Text("Giderler")
+                    .font(AppTypography.headline)
+                    .foregroundStyle(AppTheme.textPrimary)
+
+                Spacer()
+
+                Button {
+                    isShowingAddExpense = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: AppSizes.iconXSmall, weight: .semibold))
+                        .foregroundStyle(AppTheme.primary)
+                        .frame(width: 28, height: 28)
+                        .background(AppTheme.primarySubtle)
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.appPressScale)
+                .accessibilityLabel("Gider Ekle")
+            }
+
+            NavigationLink {
+                ExpensesListView(vehicle: vehicle, viewModel: expensesViewModel)
+            } label: {
+                CardView {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        HStack {
+                            Text("Bu Ay")
+                                .font(AppTypography.footnote)
+                                .foregroundStyle(AppTheme.textSecondary)
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: AppSizes.iconXSmall, weight: .semibold))
+                                .foregroundStyle(AppTheme.textTertiary)
+                        }
+
+                        Text(expensesViewModel.thisMonthTotal.formattedCurrencyTL())
+                            .font(AppTypography.valueEmphasis)
+                            .foregroundStyle(AppTheme.textPrimary)
+
+                        if let latest = expensesViewModel.latestExpense {
+                            HStack(spacing: 6) {
+                                Image(systemName: latest.category.systemImage)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(latest.category.tintColor)
+
+                                Text("Son: \(latest.category.displayName) · \(latest.amount.formattedCurrencyTL())")
+                                    .font(AppTypography.caption)
+                                    .foregroundStyle(AppTheme.textSecondary)
+                                    .lineLimit(1)
+                            }
+                        } else {
+                            Text("Henüz gider eklenmedi")
+                                .font(AppTypography.caption)
+                                .foregroundStyle(AppTheme.textTertiary)
+                        }
+                    }
+                }
+            }
+            .buttonStyle(.appPressScale)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Giderler, bu ay \(expensesViewModel.thisMonthTotal.formattedCurrencyTL())")
+            .accessibilityHint("Tüm giderleri gör")
+        }
     }
 
     private var header: some View {

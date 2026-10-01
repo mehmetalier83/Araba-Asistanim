@@ -1,19 +1,20 @@
 import SwiftUI
 
+/// Registration asks for nothing but email and password — no name, no vehicle
+/// info, nothing else. A display name is derived from the email behind the
+/// scenes (see `MockAuthService`); anything more can be filled in later from
+/// Settings. Google/Apple skip the form entirely.
 struct RegisterView: View {
     @EnvironmentObject private var authViewModel: AuthViewModel
 
-    @State private var firstName = ""
-    @State private var lastName = ""
     @State private var email = ""
     @State private var password = ""
     @State private var confirmPassword = ""
 
-    @State private var firstNameError: String?
-    @State private var lastNameError: String?
     @State private var emailError: String?
     @State private var confirmPasswordError: String?
     @State private var hasTouchedPassword = false
+    @State private var loadingProvider: SocialSignInButton.Provider?
 
     var body: some View {
         ScrollView {
@@ -29,15 +30,19 @@ struct RegisterView: View {
                 }
                 .padding(.top, AppSpacing.md)
 
-                VStack(alignment: .leading, spacing: AppSpacing.md) {
-                    HStack(spacing: AppSpacing.sm) {
-                        AppTextField(title: "Ad", placeholder: "Ayşe", text: $firstName, textContentType: .givenName, errorMessage: firstNameError)
-                            .onChange(of: firstName) { firstNameError = nil }
-
-                        AppTextField(title: "Soyad", placeholder: "Yılmaz", text: $lastName, textContentType: .familyName, errorMessage: lastNameError)
-                            .onChange(of: lastName) { lastNameError = nil }
+                VStack(spacing: AppSpacing.sm) {
+                    SocialSignInButton(provider: .apple, isLoading: loadingProvider == .apple) {
+                        signIn(with: .apple)
                     }
+                    SocialSignInButton(provider: .google, isLoading: loadingProvider == .google) {
+                        signIn(with: .google)
+                    }
+                }
+                .disabled(authViewModel.isAuthenticating)
 
+                OrDivider()
+
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
                     AppTextField(
                         title: "E-posta",
                         placeholder: "sen@ornek.com",
@@ -76,9 +81,10 @@ struct RegisterView: View {
                     ErrorView(message: errorMessage)
                 }
 
-                PrimaryButton(title: "Hesap Oluştur", isLoading: authViewModel.isAuthenticating) {
+                PrimaryButton(title: "Hesap Oluştur", isLoading: loadingProvider == nil && authViewModel.isAuthenticating) {
                     submit()
                 }
+                .disabled(loadingProvider != nil)
             }
             .padding(AppSpacing.md)
         }
@@ -114,17 +120,29 @@ struct RegisterView: View {
 
     private func submit() {
         authViewModel.clearError()
-        firstNameError = firstName.trimmingCharacters(in: .whitespaces).isEmpty ? "Adını gir." : nil
-        lastNameError = lastName.trimmingCharacters(in: .whitespaces).isEmpty ? "Soyadını gir." : nil
         emailError = email.isValidEmail ? nil : "Geçerli bir e-posta adresi gir."
         confirmPasswordError = confirmPassword == password ? nil : "Şifreler eşleşmiyor."
         hasTouchedPassword = true
 
-        guard firstNameError == nil, lastNameError == nil, emailError == nil,
-              confirmPasswordError == nil, PasswordRequirement.allSatisfied(by: password) else { return }
+        guard emailError == nil, confirmPasswordError == nil,
+              PasswordRequirement.allSatisfied(by: password) else { return }
 
         Task {
-            await authViewModel.signUp(firstName: firstName, lastName: lastName, email: email, password: password)
+            await authViewModel.signUp(email: email, password: password)
+        }
+    }
+
+    private func signIn(with provider: SocialSignInButton.Provider) {
+        authViewModel.clearError()
+        loadingProvider = provider
+        Task {
+            switch provider {
+            case .google:
+                await authViewModel.signInWithGoogle()
+            case .apple:
+                await authViewModel.signInWithApple()
+            }
+            loadingProvider = nil
         }
     }
 }

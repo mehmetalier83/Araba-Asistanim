@@ -7,6 +7,7 @@ struct AppTextField: View {
     let title: String
     let placeholder: String
     @Binding var text: String
+    var icon: String? = nil
     var isSecure: Bool = false
     var keyboardType: UIKeyboardType = .default
     var textContentType: UITextContentType? = nil
@@ -22,6 +23,14 @@ struct AppTextField: View {
                 .foregroundStyle(AppTheme.textSecondary)
 
             HStack(spacing: AppSpacing.xs) {
+                if let icon {
+                    Image(systemName: icon)
+                        .font(.system(size: AppSizes.iconSmall))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .frame(width: AppSizes.iconMedium)
+                        .accessibilityHidden(true)
+                }
+
                 Group {
                     if isSecure && !isSecureTextVisible {
                         SecureField(placeholder, text: $text)

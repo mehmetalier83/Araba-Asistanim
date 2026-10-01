@@ -4,4 +4,5 @@ import Foundation
 enum HomeRoute: Hashable {
     case settings
     case vehicleDetail(Vehicle)
+    case expenses(Vehicle)
 }

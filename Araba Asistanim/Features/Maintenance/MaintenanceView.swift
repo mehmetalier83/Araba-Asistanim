@@ -1,8 +1,15 @@
 import SwiftUI
 
 struct MaintenanceView: View {
-    private let records = PreviewData.maintenanceRecords
+    @State private var records = AppSession.isDemoAccount ? PreviewData.maintenanceRecords : []
     @State private var isShowingAddMaintenance = false
+    @State private var isShowingNoVehicleAlert = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// `nil` for every account except the seeded demo — there is no shared
+    /// store yet linking this tab to whatever the Vehicles tab holds, so a
+    /// real vehicle must exist in the one place this phase knows about it.
+    private let vehicle: Vehicle? = AppSession.isDemoAccount ? PreviewData.featuredVehicle : nil
 
     private var overdue: [MaintenanceRecord] { records.filter { $0.status == .overdue } }
     private var dueSoon: [MaintenanceRecord] { records.filter { $0.status == .dueSoon } }
@@ -18,7 +25,7 @@ struct MaintenanceView: View {
                         message: "Araç geçmişini oluşturmak için servislerini takip et.",
                         actionTitle: "Bakım Ekle"
                     ) {
-                        isShowingAddMaintenance = true
+                        addMaintenanceTapped()
                     }
                 } else {
                     ScrollView {
@@ -42,19 +49,34 @@ struct MaintenanceView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        isShowingAddMaintenance = true
+                        addMaintenanceTapped()
                     } label: {
                         Label("Bakım Ekle", systemImage: "plus")
                     }
                 }
             }
             .sheet(isPresented: $isShowingAddMaintenance) {
-                PlaceholderSheet(
-                    systemImage: "wrench.and.screwdriver.fill",
-                    title: "Bakım Ekle",
-                    message: "Bakım kaydı oluşturma özelliği henüz eklenmedi. Veri katmanı tamamlandığında kullanılabilir olacak."
-                )
+                if let vehicle {
+                    AddMaintenanceView(vehicle: vehicle) { record in
+                        withAnimation(reduceMotion ? nil : AppAnimation.standard) {
+                            records.append(record)
+                        }
+                    }
+                }
             }
+            .alert("Önce Araç Ekle", isPresented: $isShowingNoVehicleAlert) {
+                Button("Tamam", role: .cancel) {}
+            } message: {
+                Text("Bakım kaydı ekleyebilmek için önce Araçlar sekmesinden bir araç eklemelisin.")
+            }
+        }
+    }
+
+    private func addMaintenanceTapped() {
+        if vehicle != nil {
+            isShowingAddMaintenance = true
+        } else {
+            isShowingNoVehicleAlert = true
         }
     }
 

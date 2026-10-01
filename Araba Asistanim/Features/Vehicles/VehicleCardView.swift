@@ -1,8 +1,10 @@
 import SwiftUI
 
-/// A compact row representing one vehicle in a list. For the single-vehicle
-/// hero treatment used on Home, see VehicleHeroCard — a list row and a hero
-/// element have different jobs and are styled independently.
+/// A compact row representing one vehicle in a list. No chevron of its own —
+/// it's always used inside a List via NavigationLink, which already supplies
+/// the disclosure indicator; adding a second one would double up. For the
+/// single-vehicle hero treatment used on Home, see VehicleHeroCard — a list
+/// row and a hero element have different jobs and are styled independently.
 struct VehicleCardView: View {
     let vehicle: Vehicle
 
@@ -27,11 +29,6 @@ struct VehicleCardView: View {
             }
 
             Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: AppSizes.iconXSmall, weight: .semibold))
-                .foregroundStyle(AppTheme.textTertiary)
-                .accessibilityHidden(true)
         }
         .padding(AppSpacing.md)
         .background(AppTheme.cardBackground)

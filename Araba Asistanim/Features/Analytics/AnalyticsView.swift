@@ -3,41 +3,61 @@ import SwiftUI
 struct AnalyticsView: View {
     @State private var timeRange: AnalyticsTimeRange = .sixMonths
 
-    private let monthlyExpenses = PreviewData.monthlyExpenses
-    private let monthlyFuelConsumption = PreviewData.monthlyFuelConsumption
-    private let expenseBreakdown = PreviewData.expenseBreakdown
-    private let summary = PreviewData.analyticsSummary
+    /// Only the seeded demo account has sample history to chart — every
+    /// other account starts with nothing recorded yet, so the charts
+    /// themselves would just be empty axes with no story to tell.
+    private let hasData = AppSession.isDemoAccount
+
+    private let monthlyExpenses = AppSession.isDemoAccount ? PreviewData.monthlyExpenses : []
+    private let monthlyFuelConsumption = AppSession.isDemoAccount ? PreviewData.monthlyFuelConsumption : []
+    private let expenseBreakdown = AppSession.isDemoAccount ? PreviewData.expenseBreakdown : []
+    private let summary = AppSession.isDemoAccount ? PreviewData.analyticsSummary : []
 
     private let summaryColumns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                    timeRangePicker
-
-                    LazyVGrid(columns: summaryColumns, spacing: AppSpacing.sm) {
-                        ForEach(summary) { statistic in
-                            StatisticCard(statistic: statistic)
-                        }
-                    }
-
-                    chartSection(title: "Aylık Giderler", subtitle: "Ne kadar harcıyorum?") {
-                        MonthlyExpensesChartView(data: timeRange.filter(monthlyExpenses))
-                    }
-
-                    chartSection(title: "Yakıt Tüketimi", subtitle: "Tüketim nasıl değişiyor?") {
-                        FuelConsumptionChartView(data: timeRange.filter(monthlyFuelConsumption))
-                    }
-
-                    chartSection(title: "Kategoriye Göre Giderler", subtitle: "Param nereye gidiyor?") {
-                        SpendingByCategoryChartView(data: expenseBreakdown)
-                    }
+            Group {
+                if hasData {
+                    content
+                } else {
+                    EmptyStateView(
+                        systemImage: "chart.pie.fill",
+                        title: "Henüz analiz edilecek veri yok",
+                        message: "Yakıt, bakım ve gider kayıtları ekledikçe harcama trendlerini burada görebileceksin."
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .padding(AppSpacing.md)
             }
             .background(AppTheme.groupedBackground)
             .navigationTitle("Analiz")
+        }
+    }
+
+    private var content: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                timeRangePicker
+
+                LazyVGrid(columns: summaryColumns, spacing: AppSpacing.sm) {
+                    ForEach(summary) { statistic in
+                        StatisticCard(statistic: statistic)
+                    }
+                }
+
+                chartSection(title: "Aylık Giderler", subtitle: "Ne kadar harcıyorum?") {
+                    MonthlyExpensesChartView(data: timeRange.filter(monthlyExpenses))
+                }
+
+                chartSection(title: "Yakıt Tüketimi", subtitle: "Tüketim nasıl değişiyor?") {
+                    FuelConsumptionChartView(data: timeRange.filter(monthlyFuelConsumption))
+                }
+
+                chartSection(title: "Kategoriye Göre Giderler", subtitle: "Param nereye gidiyor?") {
+                    SpendingByCategoryChartView(data: expenseBreakdown)
+                }
+            }
+            .padding(AppSpacing.md)
         }
     }
 

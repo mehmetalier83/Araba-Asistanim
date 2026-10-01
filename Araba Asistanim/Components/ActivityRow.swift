@@ -8,14 +8,14 @@ struct ActivityRow: View {
         HStack(spacing: AppSpacing.sm) {
             Image(systemName: record.category.systemImage)
                 .font(.system(size: AppSizes.iconSmall))
-                .foregroundStyle(AppTheme.primary)
+                .foregroundStyle(record.category.tintColor)
                 .frame(width: AppSizes.iconLarge, height: AppSizes.iconLarge)
-                .background(AppTheme.primarySubtle)
+                .background(record.category.tintColor.opacity(0.14))
                 .clipShape(Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(record.title)
+                Text(record.serviceName ?? record.category.displayName)
                     .font(AppTypography.body)
                     .foregroundStyle(AppTheme.textPrimary)
 
@@ -32,7 +32,7 @@ struct ActivityRow: View {
         }
         .padding(.vertical, AppSpacing.xxs)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(record.title), \(record.amount.formattedCurrencyTL()), \(record.date.formattedDayMonthYear())")
+        .accessibilityLabel("\(record.serviceName ?? record.category.displayName), \(record.amount.formattedCurrencyTL()), \(record.date.formattedDayMonthYear())")
     }
 }
 

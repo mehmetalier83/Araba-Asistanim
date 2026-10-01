@@ -5,6 +5,7 @@ struct HomeView: View {
     @EnvironmentObject private var appState: AppState
     @State private var path = NavigationPath()
     @State private var isShowingNotifications = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -12,20 +13,25 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
                     header
 
-                    VehicleHeroCard(vehicle: viewModel.vehicle) {
-                        path.append(HomeRoute.vehicleDetail(viewModel.vehicle))
+                    if let vehicle = viewModel.vehicle {
+                        VehicleHeroCard(vehicle: vehicle) {
+                            path.append(HomeRoute.vehicleDetail(vehicle))
+                        }
+
+                        quickActions
+                        statRow(vehicle: vehicle)
+
+                        if let item = viewModel.nextMaintenanceItem {
+                            nextServiceBanner(item)
+                        }
+
+                        if !viewModel.recentActivity.isEmpty {
+                            recentActivity
+                            aiInsight
+                        }
+                    } else {
+                        emptyGarageCard
                     }
-
-                    quickActions
-
-                    statRow
-
-                    if let item = viewModel.nextMaintenanceItem {
-                        nextServiceBanner(item)
-                    }
-
-                    recentActivity
-                    aiInsight
                 }
                 .padding(.horizontal, AppSpacing.md)
                 .padding(.bottom, AppSpacing.xl)
@@ -39,14 +45,37 @@ struct HomeView: View {
                     SettingsView()
                 case .vehicleDetail(let vehicle):
                     VehicleDetailView(vehicle: vehicle)
+                case .expenses(let vehicle):
+                    ExpensesListView(vehicle: vehicle)
                 }
             }
             .sheet(item: $viewModel.activeQuickAction) { action in
-                PlaceholderSheet(
-                    systemImage: action.systemImage,
-                    title: action.title,
-                    message: action.placeholderMessage
-                )
+                if let vehicle = viewModel.vehicle, action == .addExpense {
+                    AddExpenseView(vehicle: vehicle) { expense in
+                        viewModel.recordExpense(expense)
+                    }
+                } else if let vehicle = viewModel.vehicle, action == .addFuel {
+                    AddFuelView(vehicle: vehicle) { fuelRecord in
+                        viewModel.recordFuel(fuelRecord)
+                    }
+                } else if let vehicle = viewModel.vehicle, action == .addMaintenance {
+                    AddMaintenanceView(vehicle: vehicle) { record in
+                        viewModel.recordMaintenance(record)
+                    }
+                } else {
+                    PlaceholderSheet(
+                        systemImage: action.systemImage,
+                        title: action.title,
+                        message: action.placeholderMessage
+                    )
+                }
+            }
+            .sheet(isPresented: $viewModel.isShowingAddVehicle) {
+                AddVehicleView { vehicle in
+                    withAnimation(reduceMotion ? nil : AppAnimation.standard) {
+                        viewModel.setFeaturedVehicle(vehicle)
+                    }
+                }
             }
             .sheet(isPresented: $viewModel.isShowingInsightDetail) {
                 PlaceholderSheet(
@@ -74,7 +103,7 @@ struct HomeView: View {
                     .font(AppTypography.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
 
-                Text("\(viewModel.vehicle.make)'in hazır 👋")
+                Text(viewModel.vehicle.map { "\($0.make)'in hazır 👋" } ?? "Hoş geldin 👋")
                     .font(AppTypography.title)
                     .foregroundStyle(AppTheme.textPrimary)
             }
@@ -97,6 +126,59 @@ struct HomeView: View {
             }
         }
         .padding(.top, AppSpacing.xs)
+    }
+
+    // MARK: - Empty garage
+
+    /// Mirrors `VehicleHeroCard`'s exact visual treatment (same gradient,
+    /// glyph, corner radius and shadow) so the very first thing a brand-new
+    /// account sees still feels like the finished product, not a placeholder.
+    private var emptyGarageCard: some View {
+        ZStack(alignment: .bottomLeading) {
+            LinearGradient.graphiteSurface()
+
+            Image(systemName: "car.side.fill")
+                .font(.system(size: 108))
+                .foregroundStyle(.white.opacity(0.08))
+                .frame(width: 108, height: 108)
+                .offset(x: 56, y: 8)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Henüz aracın yok")
+                        .font(AppTypography.title2)
+                        .foregroundStyle(.white)
+
+                    Text("Bakım, yakıt ve giderlerini takip etmeye başlamak için ilk aracını ekle.")
+                        .font(AppTypography.subheadline)
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+
+                Button {
+                    viewModel.isShowingAddVehicle = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("Araç Ekle")
+                        Image(systemName: "plus")
+                    }
+                    .font(AppTypography.subheadline.weight(.medium))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, AppSpacing.sm)
+                    .padding(.vertical, AppSpacing.xs)
+                    .background(.white.opacity(0.16))
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.appPressScale)
+            }
+            .padding(AppSpacing.lg)
+        }
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.hero, style: .continuous))
+        .appShadow()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Henüz aracın yok")
+        .accessibilityHint("Araç eklemek için dokun")
     }
 
     // MARK: - Quick actions
@@ -130,7 +212,7 @@ struct HomeView: View {
 
     // MARK: - Stat row
 
-    private var statRow: some View {
+    private func statRow(vehicle: Vehicle) -> some View {
         HStack(spacing: AppSpacing.sm) {
             FuelTrendCard(
                 value: viewModel.fuelConsumptionText,
@@ -145,7 +227,7 @@ struct HomeView: View {
                 changePercent: viewModel.monthlyExpensesChangePercent,
                 breakdown: viewModel.expenseBreakdown
             ) {
-                appState.selectedTab = .analytics
+                path.append(HomeRoute.expenses(vehicle))
             }
         }
     }

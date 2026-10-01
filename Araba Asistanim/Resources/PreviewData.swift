@@ -38,6 +38,7 @@ enum PreviewData {
 
     static let maintenanceRecords: [MaintenanceRecord] = [
         MaintenanceRecord(
+            vehicleID: vehicles[0].id,
             title: "Lastik Rotasyonu",
             category: .tireRotation,
             status: .overdue,
@@ -46,6 +47,7 @@ enum PreviewData {
             cost: nil
         ),
         MaintenanceRecord(
+            vehicleID: vehicles[0].id,
             title: "Yağ Değişimi",
             category: .oilChange,
             status: .dueSoon,
@@ -54,28 +56,34 @@ enum PreviewData {
             cost: nil
         ),
         MaintenanceRecord(
+            vehicleID: vehicles[0].id,
             title: "Yağ Değişimi",
             category: .oilChange,
             status: .completed,
             date: date(2026, 8, 12),
             mileageKm: 120_000,
-            cost: 7_450
+            cost: 7_450,
+            serviceName: "ABC Oto Servis"
         ),
         MaintenanceRecord(
+            vehicleID: vehicles[0].id,
             title: "Fren Kontrolü",
             category: .brakeInspection,
             status: .completed,
             date: date(2026, 4, 5),
             mileageKm: 116_000,
-            cost: 4_800
+            cost: 4_800,
+            serviceName: "ABC Oto Servis"
         ),
         MaintenanceRecord(
+            vehicleID: vehicles[0].id,
             title: "Akü Değişimi",
             category: .batteryReplacement,
             status: .completed,
             date: date(2026, 1, 10),
             mileageKm: 110_500,
-            cost: 3_200
+            cost: 3_200,
+            serviceName: "Bosch Car Service"
         )
     ]
 
@@ -84,20 +92,44 @@ enum PreviewData {
         maintenanceRecords.first { $0.status != .completed }
     }
 
+    // MARK: - Expenses
+
+    /// The full expense ledger across both vehicles — the richer, per-vehicle
+    /// dataset behind the Expenses feature (list, detail, dashboard section).
+    /// `recentActivity` below is just this list's 3 most recent entries.
+    static let allExpenses: [ExpenseRecord] = {
+        let bmw = vehicles[0].id
+        let corolla = vehicles[1].id
+        return [
+            ExpenseRecord(vehicleID: bmw, category: .fuel, amount: 1_850, date: date(2026, 9, 30), mileageKm: 124_580, serviceName: "Shell"),
+            ExpenseRecord(vehicleID: bmw, category: .maintenance, amount: 4_250, date: date(2026, 9, 22), mileageKm: 124_100, serviceName: "ABC Oto Servis", note: "10.000 km periyodik bakım"),
+            ExpenseRecord(vehicleID: bmw, category: .fuel, amount: 2_350, date: date(2026, 9, 18), mileageKm: 123_400, serviceName: "Shell"),
+            ExpenseRecord(vehicleID: bmw, category: .tires, amount: 3_600, date: date(2026, 9, 5), mileageKm: 122_900, serviceName: "Lastik Dünyası"),
+            ExpenseRecord(vehicleID: bmw, category: .insurance, amount: 6_200, date: date(2026, 8, 12), mileageKm: 120_000, serviceName: "Anadolu Sigorta"),
+            ExpenseRecord(vehicleID: bmw, category: .parking, amount: 120, date: date(2026, 8, 3), mileageKm: 119_500),
+            ExpenseRecord(vehicleID: bmw, category: .toll, amount: 340, date: date(2026, 7, 28), mileageKm: 118_200),
+            ExpenseRecord(vehicleID: bmw, category: .fine, amount: 900, date: date(2026, 6, 14), mileageKm: 115_000, note: "Hız cezası"),
+            ExpenseRecord(vehicleID: bmw, category: .vehicleTax, amount: 4_800, date: date(2026, 1, 15), mileageKm: 108_000),
+            ExpenseRecord(vehicleID: corolla, category: .fuel, amount: 1_450, date: date(2026, 9, 29), mileageKm: 65_100, serviceName: "BP"),
+            ExpenseRecord(vehicleID: corolla, category: .carWash, amount: 250, date: date(2026, 9, 20), mileageKm: 64_800, serviceName: "Yıkama Dünyası"),
+            ExpenseRecord(vehicleID: corolla, category: .service, amount: 2_100, date: date(2026, 8, 10), mileageKm: 63_500, serviceName: "Toyota Yetkili Servis")
+        ]
+    }()
+
     // MARK: - Recent activity (Home)
 
-    static let recentActivity: [ExpenseRecord] = [
-        ExpenseRecord(title: "Yağ Değişimi", category: .maintenance, amount: 7_450, date: date(2026, 8, 12)),
-        ExpenseRecord(title: "Yakıt", category: .fuel, amount: 2_350, date: date(2026, 9, 18)),
-        ExpenseRecord(title: "Fren Kontrolü", category: .maintenance, amount: 4_800, date: date(2026, 4, 5))
-    ]
+    /// The 3 most recent entries across the whole ledger, surfaced on the
+    /// Home dashboard's "Son Hareketler" card.
+    static var recentActivity: [ExpenseRecord] {
+        Array(allExpenses.sorted { $0.date > $1.date }.prefix(3))
+    }
 
     // MARK: - Fuel records
 
     static let fuelRecords: [FuelRecord] = [
-        FuelRecord(date: date(2026, 9, 18), liters: 42, cost: 2_350, consumptionPer100Km: 7.8),
-        FuelRecord(date: date(2026, 8, 20), liters: 40, cost: 2_180, consumptionPer100Km: 7.6),
-        FuelRecord(date: date(2026, 7, 22), liters: 41, cost: 2_260, consumptionPer100Km: 7.8)
+        FuelRecord(vehicleID: vehicles[0].id, date: date(2026, 9, 18), liters: 42, cost: 2_350, mileageKm: 123_400, station: "Shell"),
+        FuelRecord(vehicleID: vehicles[0].id, date: date(2026, 8, 20), liters: 40, cost: 2_180, mileageKm: 121_900, station: "Shell"),
+        FuelRecord(vehicleID: vehicles[0].id, date: date(2026, 7, 22), liters: 41, cost: 2_260, mileageKm: 120_450, station: "BP")
     ]
 
     // MARK: - Key figures (raw values, shared by Home and Analytics)

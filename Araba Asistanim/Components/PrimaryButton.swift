@@ -5,6 +5,7 @@ import SwiftUI
 /// while guarding against duplicate submissions.
 struct PrimaryButton: View {
     let title: String
+    var icon: String? = nil
     var isEnabled: Bool = true
     var isLoading: Bool = false
     let action: () -> Void
@@ -16,9 +17,16 @@ struct PrimaryButton: View {
             action()
         } label: {
             ZStack {
-                Text(title)
-                    .font(AppTypography.headline)
-                    .opacity(isLoading ? 0 : 1)
+                HStack(spacing: AppSpacing.xs) {
+                    Text(title)
+                        .font(AppTypography.headline)
+
+                    if let icon {
+                        Image(systemName: icon)
+                            .font(.system(size: AppSizes.iconSmall, weight: .semibold))
+                    }
+                }
+                .opacity(isLoading ? 0 : 1)
 
                 if isLoading {
                     ProgressView()
@@ -30,9 +38,10 @@ struct PrimaryButton: View {
             .frame(height: AppSizes.buttonHeight)
         }
         .buttonStyle(.appPressScale)
-        .background(AppTheme.primary)
+        .background(LinearGradient.primaryButton())
         .foregroundStyle(.white)
         .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
+        .appShadow(AppShadow.primaryGlow)
         .disabled(!isInteractive)
         .opacity(isEnabled ? 1 : 0.5)
         .accessibilityLabel(title)

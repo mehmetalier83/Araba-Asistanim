@@ -9,6 +9,7 @@ struct LoginView: View {
     @State private var password = ""
     @State private var emailError: String?
     @State private var passwordError: String?
+    @State private var loadingProvider: SocialSignInButton.Provider?
 
     var body: some View {
         ScrollView {
@@ -23,6 +24,18 @@ struct LoginView: View {
                         .foregroundStyle(AppTheme.textSecondary)
                 }
                 .padding(.top, AppSpacing.md)
+
+                VStack(spacing: AppSpacing.sm) {
+                    SocialSignInButton(provider: .apple, isLoading: loadingProvider == .apple) {
+                        signIn(with: .apple)
+                    }
+                    SocialSignInButton(provider: .google, isLoading: loadingProvider == .google) {
+                        signIn(with: .google)
+                    }
+                }
+                .disabled(authViewModel.isAuthenticating)
+
+                OrDivider()
 
                 VStack(alignment: .leading, spacing: AppSpacing.md) {
                     AppTextField(
@@ -55,9 +68,10 @@ struct LoginView: View {
                 }
 
                 VStack(spacing: AppSpacing.sm) {
-                    PrimaryButton(title: "Giriş Yap", isLoading: authViewModel.isAuthenticating) {
+                    PrimaryButton(title: "Giriş Yap", isLoading: loadingProvider == nil && authViewModel.isAuthenticating) {
                         submit()
                     }
+                    .disabled(loadingProvider != nil)
 
                     SecondaryButton(title: "Hesap Oluştur", action: onCreateAccount)
                 }
@@ -79,6 +93,20 @@ struct LoginView: View {
 
         Task {
             await authViewModel.signIn(email: email, password: password)
+        }
+    }
+
+    private func signIn(with provider: SocialSignInButton.Provider) {
+        authViewModel.clearError()
+        loadingProvider = provider
+        Task {
+            switch provider {
+            case .google:
+                await authViewModel.signInWithGoogle()
+            case .apple:
+                await authViewModel.signInWithApple()
+            }
+            loadingProvider = nil
         }
     }
 }

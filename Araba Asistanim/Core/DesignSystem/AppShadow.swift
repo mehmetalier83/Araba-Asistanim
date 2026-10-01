@@ -17,6 +17,19 @@ enum AppShadow {
         x: 0,
         y: 4
     )
+
+    /// A tinted glow under the app's primary call-to-action button — one of
+    /// the "truly floating elements" this file's own doc comment carves out
+    /// an exception for.
+    @MainActor
+    static var primaryGlow: AppShadowStyle {
+        AppShadowStyle(
+            color: AppTheme.primary.opacity(0.35),
+            radius: 14,
+            x: 0,
+            y: 6
+        )
+    }
 }
 
 extension View {

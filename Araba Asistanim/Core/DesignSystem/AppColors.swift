@@ -67,9 +67,40 @@ enum AppColors {
         light: Color(hex: 0xC63C3C).opacity(0.10),
         dark: Color(hex: 0xFF6B6B).opacity(0.16)
     )
+
+    /// Two additional muted accents for the expanded expense-category palette —
+    /// a 12-category picker needs more visual variety than the five core roles
+    /// above provide. Tuned per-appearance like the rest of the palette, kept
+    /// in the same restrained, non-neon register.
+    static let categoryTeal = Color(
+        light: Color(hex: 0x1E8A87),
+        dark: Color(hex: 0x4FC9C4)
+    )
+
+    static let categoryPurple = Color(
+        light: Color(hex: 0x6B4FCC),
+        dark: Color(hex: 0x9E8AFF)
+    )
 }
 
 extension LinearGradient {
+    /// The primary call-to-action surface — a subtle top-to-bottom deepening
+    /// of the accent blue rather than a flat fill, so the main button on
+    /// every form reads as a deliberately crafted surface. Kept tight (two
+    /// close shades, not a rainbow) to stay within the app's restrained
+    /// palette philosophy.
+    @MainActor
+    static func primaryButton(startPoint: UnitPoint = .top, endPoint: UnitPoint = .bottom) -> LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(light: Color(hex: 0x4472E8), dark: Color(hex: 0x82A6FF)),
+                Color(light: Color(hex: 0x2650C9), dark: Color(hex: 0x5A82E0))
+            ],
+            startPoint: startPoint,
+            endPoint: endPoint
+        )
+    }
+
     /// The dark "graphite" surface used for every automotive hero element:
     /// the Home vehicle card, the Vehicle Detail header, and Welcome. Same
     /// appearance in both light and dark mode by design — this is a fixed

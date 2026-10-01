@@ -15,6 +15,7 @@ struct SuggestedQuestionButton: View {
                 .background(AppTheme.primarySubtle)
                 .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.pill, style: .continuous))
         }
+        .buttonStyle(.appPressScale)
         .accessibilityLabel("Sor: \(question)")
     }
 }

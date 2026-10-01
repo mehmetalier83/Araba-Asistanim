@@ -6,11 +6,16 @@ import SwiftUI
 /// merely hiding it behind a sheet or leaving it on the navigation stack.
 struct AppRootView: View {
     @EnvironmentObject private var authViewModel: AuthViewModel
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
 
     var body: some View {
         Group {
             if authViewModel.currentUser != nil {
                 MainTabView()
+            } else if !hasSeenOnboarding {
+                OnboardingView {
+                    hasSeenOnboarding = true
+                }
             } else {
                 AuthContainerView()
             }
@@ -18,6 +23,10 @@ struct AppRootView: View {
         .animation(
             .respectingReduceMotion(AppAnimation.standard),
             value: authViewModel.currentUser
+        )
+        .animation(
+            .respectingReduceMotion(AppAnimation.standard),
+            value: hasSeenOnboarding
         )
     }
 }

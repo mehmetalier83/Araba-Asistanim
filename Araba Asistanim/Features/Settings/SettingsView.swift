@@ -5,22 +5,26 @@ struct SettingsView: View {
         let id = UUID()
         let title: String
         let systemImage: String
+        var value: String? = nil
+        var message: String
     }
 
     @EnvironmentObject private var authViewModel: AuthViewModel
     @State private var isShowingLogoutConfirmation = false
+    @State private var activeRow: Row?
 
     private let preferenceRows = [
-        Row(title: "Görünüm", systemImage: "circle.lefthalf.filled"),
-        Row(title: "Bildirimler", systemImage: "bell.fill"),
-        Row(title: "Birimler", systemImage: "ruler.fill"),
-        Row(title: "Para Birimi", systemImage: "banknote.fill")
+        Row(title: "Dil", systemImage: "globe", value: "Türkçe", message: "Dil seçenekleri yakında eklenecek. Uygulama şu an Türkçe olarak sunuluyor."),
+        Row(title: "Görünüm", systemImage: "circle.lefthalf.filled", message: "Açık/koyu tema tercihi yakında eklenecek. Şu an sistem ayarını takip ediyor."),
+        Row(title: "Bildirimler", systemImage: "bell.fill", message: "Bildirim tercihleri henüz eklenmedi. Bu özellik ileride kullanılabilir olacak."),
+        Row(title: "Birimler", systemImage: "ruler.fill", message: "Mesafe birimi tercihi henüz eklenmedi. Şu an kilometre kullanılıyor."),
+        Row(title: "Para Birimi", systemImage: "banknote.fill", message: "Para birimi tercihi henüz eklenmedi. Şu an Türk Lirası kullanılıyor.")
     ]
 
     private let aboutRows = [
-        Row(title: "CarLog AI Hakkında", systemImage: "info.circle.fill"),
-        Row(title: "Gizlilik Politikası", systemImage: "hand.raised.fill"),
-        Row(title: "Kullanım Koşulları", systemImage: "doc.text.fill")
+        Row(title: "CarLog AI Hakkında", systemImage: "info.circle.fill", message: "CarLog AI, aracının bakım, yakıt ve giderlerini tek bir yerden takip etmeni sağlar."),
+        Row(title: "Gizlilik Politikası", systemImage: "hand.raised.fill", message: "Gizlilik politikası metni henüz eklenmedi."),
+        Row(title: "Kullanım Koşulları", systemImage: "doc.text.fill", message: "Kullanım koşulları metni henüz eklenmedi.")
     ]
 
     var body: some View {
@@ -28,20 +32,19 @@ struct SettingsView: View {
             if let user = authViewModel.currentUser {
                 Section("Hesap") {
                     accountHeader(for: user)
-                    SettingsRowView(row: Row(title: "E-posta", systemImage: "envelope.fill"), value: user.email)
+                    SettingsRowView(row: Row(title: "E-posta", systemImage: "envelope.fill", value: user.email, message: ""), isInformational: true, action: nil)
                 }
             }
 
             Section("Tercihler") {
-                SettingsRowView(row: Row(title: "Dil", systemImage: "globe"), value: "Türkçe")
                 ForEach(preferenceRows) { row in
-                    SettingsRowView(row: row)
+                    SettingsRowView(row: row) { activeRow = row }
                 }
             }
 
             Section("Hakkında") {
                 ForEach(aboutRows) { row in
-                    SettingsRowView(row: row)
+                    SettingsRowView(row: row) { activeRow = row }
                 }
             }
 
@@ -70,6 +73,9 @@ struct SettingsView: View {
             }
             Button("Vazgeç", role: .cancel) {}
         }
+        .sheet(item: $activeRow) { row in
+            PlaceholderSheet(systemImage: row.systemImage, title: row.title, message: row.message)
+        }
     }
 
     private func accountHeader(for user: User) -> some View {
@@ -92,14 +98,26 @@ struct SettingsView: View {
 
     private struct SettingsRowView: View {
         let row: Row
-        var value: String? = nil
+        var isInformational: Bool = false
+        var action: (() -> Void)?
 
         var body: some View {
+            Group {
+                if let action {
+                    Button(action: action) { content }
+                        .foregroundStyle(AppTheme.textPrimary)
+                } else {
+                    content
+                }
+            }
+        }
+
+        private var content: some View {
             HStack(spacing: AppSpacing.sm) {
                 Image(systemName: row.systemImage)
                     .font(.system(size: AppSizes.iconXSmall))
                     .foregroundStyle(AppTheme.primary)
-                    .frame(width: 28, height: 28)
+                    .frame(width: AppSizes.iconLarge, height: AppSizes.iconLarge)
                     .background(AppTheme.primarySubtle)
                     .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.small, style: .continuous))
                     .accessibilityHidden(true)
@@ -108,16 +126,24 @@ struct SettingsView: View {
                     .font(AppTypography.body)
                     .foregroundStyle(AppTheme.textPrimary)
 
-                if let value {
-                    Spacer()
+                Spacer()
+
+                if let value = row.value {
                     Text(value)
                         .font(AppTypography.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                 }
+
+                if !isInformational {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: AppSizes.iconXSmall, weight: .semibold))
+                        .foregroundStyle(AppTheme.textTertiary)
+                }
             }
             .padding(.vertical, AppSpacing.xxs)
+            .contentShape(Rectangle())
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(value.map { "\(row.title): \($0)" } ?? row.title)
+            .accessibilityLabel(row.value.map { "\(row.title): \($0)" } ?? row.title)
         }
     }
 }
