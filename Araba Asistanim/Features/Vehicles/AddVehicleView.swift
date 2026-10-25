@@ -23,7 +23,7 @@ struct AddVehicleView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            FormScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                         Text("Aracını ekle")

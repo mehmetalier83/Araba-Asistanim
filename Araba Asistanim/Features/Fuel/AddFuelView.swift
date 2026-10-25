@@ -30,7 +30,7 @@ struct AddFuelView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            FormScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                         Text(isEditing ? "Yakıtı düzenle" : "Yakıt ekle")

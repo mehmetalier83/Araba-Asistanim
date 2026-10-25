@@ -49,6 +49,7 @@ struct AmountField: View {
             }
         }
         .animation(AppAnimation.fast, value: errorMessage)
+        .revealsWhenFocused(id: "field.amount", isFocused: isFocused)
     }
 
     private var borderColor: Color {

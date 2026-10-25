@@ -1,5 +1,6 @@
 import FirebaseAuth
 import Foundation
+import GoogleSignIn
 
 /// AuthServiceProtocol backed by Firebase Authentication. Firebase keeps its
 /// own session (and silently refreshes the ID token), so the token handed
@@ -35,10 +36,32 @@ final class FirebaseAuthService: AuthServiceProtocol {
         }
     }
 
-    /// Google sign-in needs the separate GoogleSignIn SDK plus a URL scheme
-    /// taken from GoogleService-Info.plist, neither of which is set up yet.
+    /// Requires the Google provider enabled in the Firebase console (which
+    /// adds CLIENT_ID to GoogleService-Info.plist) and the matching URL
+    /// scheme — see `GoogleSignInHelper`.
     func signInWithGoogle() async throws -> (user: User, token: AuthToken) {
-        throw AuthError.providerUnavailable
+        guard GoogleSignInHelper.isConfigured, let clientID = GoogleSignInHelper.clientID else {
+            throw AuthError.providerUnavailable
+        }
+        guard let presenter = GoogleSignInHelper.presentingViewController else {
+            throw AuthError.unknown
+        }
+        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+
+        do {
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presenter)
+            guard let idToken = result.user.idToken?.tokenString else { throw AuthError.unknown }
+            let credential = GoogleAuthProvider.credential(
+                withIDToken: idToken,
+                accessToken: result.user.accessToken.tokenString
+            )
+            let authResult = try await auth.signIn(with: credential)
+            return try await session(for: authResult.user)
+        } catch let error as GIDSignInError where error.code == .canceled {
+            throw AuthError.cancelled
+        } catch {
+            throw Self.map(error)
+        }
     }
 
     /// Requires the "Sign in with Apple" capability on the target and the
@@ -70,6 +93,7 @@ final class FirebaseAuthService: AuthServiceProtocol {
     }
 
     func signOut() throws {
+        GIDSignIn.sharedInstance.signOut()
         try auth.signOut()
     }
 

@@ -70,6 +70,7 @@ struct AppTextField: View {
             }
         }
         .animation(AppAnimation.fast, value: errorMessage)
+        .revealsWhenFocused(id: "field.\(title)", isFocused: isFocused)
     }
 
     private var borderColor: Color {
