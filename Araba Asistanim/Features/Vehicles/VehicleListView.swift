@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct VehicleListView: View {
-    @StateObject private var viewModel = VehiclesViewModel()
+    @EnvironmentObject private var store: GarageStore
+    @State private var isShowingAddVehicle = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -18,14 +19,12 @@ struct VehicleListView: View {
             .background(AppTheme.groupedBackground)
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Vehicle.self) { vehicle in
-                VehicleDetailView(vehicle: vehicle) {
-                    viewModel.deleteVehicle(vehicle)
-                }
+                VehicleDetailView(vehicleID: vehicle.id, allowsDelete: true)
             }
-            .sheet(isPresented: $viewModel.isShowingAddVehicle) {
+            .sheet(isPresented: $isShowingAddVehicle) {
                 AddVehicleView { vehicle in
                     withAnimation(reduceMotion ? nil : AppAnimation.standard) {
-                        viewModel.addVehicle(vehicle)
+                        store.addVehicle(vehicle)
                     }
                 }
             }
@@ -47,7 +46,7 @@ struct VehicleListView: View {
             Spacer()
 
             Button {
-                viewModel.isShowingAddVehicle = true
+                isShowingAddVehicle = true
             } label: {
                 Image(systemName: "plus")
                     .font(.system(size: AppSizes.iconSmall, weight: .semibold))
@@ -65,19 +64,19 @@ struct VehicleListView: View {
     @ViewBuilder
     private var content: some View {
         Group {
-            if viewModel.vehicles.isEmpty {
+            if store.vehicles.isEmpty {
                 EmptyStateView(
                     systemImage: "car.fill",
                     title: "Garajın boş",
                     message: "Bakım, yakıt ve giderleri takip etmeye başlamak için ilk aracını ekle.",
                     actionTitle: "Araç Ekle"
                 ) {
-                    viewModel.isShowingAddVehicle = true
+                    isShowingAddVehicle = true
                 }
                 .transition(.opacity)
             } else {
                 List {
-                    ForEach(viewModel.vehicles) { vehicle in
+                    ForEach(store.vehicles) { vehicle in
                         NavigationLink(value: vehicle) {
                             VehicleCardView(vehicle: vehicle)
                         }
@@ -92,7 +91,7 @@ struct VehicleListView: View {
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 withAnimation(reduceMotion ? nil : AppAnimation.standard) {
-                                    viewModel.deleteVehicle(vehicle)
+                                    store.deleteVehicle(vehicle)
                                 }
                                 HapticFeedback.success()
                             } label: {
@@ -112,9 +111,11 @@ struct VehicleListView: View {
 
 #Preview {
     VehicleListView()
+        .environmentObject(GarageStore.preview)
 }
 
 #Preview("Dark") {
     VehicleListView()
+        .environmentObject(GarageStore.preview)
         .preferredColorScheme(.dark)
 }

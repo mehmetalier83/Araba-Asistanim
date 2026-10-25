@@ -6,6 +6,12 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F1AE00000000000000000004 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = F1AE00000000000000000002 /* FirebaseCore */; };
+		F1AE00000000000000000005 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = F1AE00000000000000000003 /* FirebaseAuth */; };
+		F1AE00000000000000000007 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = F1AE00000000000000000006 /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		A0EE2FC43063EF150045993E /* Araba Asistanim.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Araba Asistanim.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -22,6 +28,9 @@
 		A0EE2FC13063EF150045993E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				F1AE00000000000000000004 /* FirebaseCore in Frameworks */,
+				F1AE00000000000000000005 /* FirebaseAuth in Frameworks */,
+				F1AE00000000000000000007 /* FirebaseFirestore in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -60,6 +69,11 @@
 				A0EE2FC63063EF150045993E /* Araba Asistanim */,
 			);
 			name = "Araba Asistanim";
+			packageProductDependencies = (
+				F1AE00000000000000000002 /* FirebaseCore */,
+				F1AE00000000000000000003 /* FirebaseAuth */,
+				F1AE00000000000000000006 /* FirebaseFirestore */,
+			);
 			productName = "Araba Asistanim";
 			productReference = A0EE2FC43063EF150045993E /* Araba Asistanim.app */;
 			productType = "com.apple.product-type.application";
@@ -88,6 +102,9 @@
 			);
 			mainGroup = A0EE2FBB3063EF150045993E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F1AE00000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A0EE2FC53063EF150045993E /* Products */;
 			projectDirPath = "";
@@ -241,13 +258,13 @@
 				DEVELOPMENT_TEAM = HJHD973MWB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Fiş ve fatura fotoğrafı çekebilmek için kameraya erişim gerekiyor.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Fiş ve fatura fotoğrafı çekebilmek için kameraya erişim gerekiyor.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
@@ -283,13 +300,13 @@
 				DEVELOPMENT_TEAM = HJHD973MWB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Fiş ve fatura fotoğrafı çekebilmek için kameraya erişim gerekiyor.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Fiş ve fatura fotoğrafı çekebilmek için kameraya erişim gerekiyor.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
@@ -335,6 +352,35 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F1AE00000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F1AE00000000000000000002 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F1AE00000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		F1AE00000000000000000003 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F1AE00000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		F1AE00000000000000000006 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F1AE00000000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A0EE2FBC3063EF150045993E /* Project object */;
 	validationLevel = 1;

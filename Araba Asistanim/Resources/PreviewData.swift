@@ -2,10 +2,8 @@ import Foundation
 
 /// Static mock/preview data for UI development.
 ///
-/// TEMPORARY: everything in this file is placeholder content for building and
-/// previewing the UI shell. It is not backed by persistence or a network
-/// service, and must be replaced by real repository-backed data in a later
-/// phase once backend and database integration are implemented.
+/// Used for SwiftUI previews and to seed the built-in demo account's garage
+/// on its first launch (see `GarageStore.load()`). Real accounts never see it.
 enum PreviewData {
 
     // MARK: - Vehicles
@@ -128,8 +126,11 @@ enum PreviewData {
 
     static let fuelRecords: [FuelRecord] = [
         FuelRecord(vehicleID: vehicles[0].id, date: date(2026, 9, 18), liters: 42, cost: 2_350, mileageKm: 123_400, station: "Shell"),
-        FuelRecord(vehicleID: vehicles[0].id, date: date(2026, 8, 20), liters: 40, cost: 2_180, mileageKm: 121_900, station: "Shell"),
-        FuelRecord(vehicleID: vehicles[0].id, date: date(2026, 7, 22), liters: 41, cost: 2_260, mileageKm: 120_450, station: "BP")
+        FuelRecord(vehicleID: vehicles[0].id, date: date(2026, 9, 2), liters: 40, cost: 2_180, mileageKm: 122_850, station: "Shell"),
+        FuelRecord(vehicleID: vehicles[0].id, date: date(2026, 8, 20), liters: 38, cost: 2_070, mileageKm: 122_320, station: "Shell"),
+        FuelRecord(vehicleID: vehicles[0].id, date: date(2026, 8, 3), liters: 41, cost: 2_260, mileageKm: 121_800, station: "BP"),
+        FuelRecord(vehicleID: vehicles[1].id, date: date(2026, 9, 29), liters: 30, cost: 1_450, mileageKm: 65_100, station: "BP"),
+        FuelRecord(vehicleID: vehicles[1].id, date: date(2026, 9, 1), liters: 32, cost: 1_520, mileageKm: 64_380, station: "BP")
     ]
 
     // MARK: - Key figures (raw values, shared by Home and Analytics)
@@ -201,18 +202,6 @@ enum PreviewData {
         "Yakıt tüketimim değişiyor mu?",
         "Hangi bakımlar yaklaşıyor?",
         "Bir servis özeti hazırla."
-    ]
-
-    /// Canned assistant replies keyed by suggested question text.
-    static let mockAssistantResponses: [String: String] = [
-        "Bu yıl ne kadar harcadım?":
-            "Kayıtlarına göre bu yıl yakıt, bakım ve diğer giderler dahil yaklaşık 82,750 TL harcadın.",
-        "Yakıt tüketimim değişiyor mu?":
-            "Evet — Ocak'ta 7.2 L/100 km olan tüketim Haziran'da 7.8 L/100 km'ye çıktı, yaklaşık %8'lik bir artış. Kısa mesafeler ve şehir içi sürüş yaygın nedenlerdir.",
-        "Hangi bakımlar yaklaşıyor?":
-            "Lastik rotasyonu gecikti, yağ değişimi ise yaklaşık 123,000 km'de yaklaşıyor.",
-        "Bir servis özeti hazırla.":
-            "Ocak ayından bu yana BMW 320i'nde bir yağ değişimi, bir fren kontrolü ve bir akü değişimi yapıldı; toplam bakım maliyeti 15,450 TL."
     ]
 
     static let aiDisclaimer = "Yapay zeka tarafından üretilen bilgiler, profesyonel mekanik kontrolün yerini tutmaz."

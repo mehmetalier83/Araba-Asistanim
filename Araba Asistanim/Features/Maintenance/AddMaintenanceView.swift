@@ -98,6 +98,7 @@ struct AddMaintenanceView: View {
             .navigationTitle(isEditing ? "Bakımı Düzenle" : "Bakım Ekle")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)
+            .keyboardDoneToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("İptal") { dismiss() }

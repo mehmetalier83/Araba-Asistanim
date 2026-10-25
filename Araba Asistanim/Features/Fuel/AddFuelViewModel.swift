@@ -43,8 +43,8 @@ final class AddFuelViewModel: ObservableObject {
         }
     }
 
-    var costValue: Double { Double(costText) ?? 0 }
-    var litersValue: Double { Double(litersText) ?? 0 }
+    var costValue: Double { costText.decimalValue ?? 0 }
+    var litersValue: Double { litersText.decimalValue ?? 0 }
 
     /// A live "price per liter" hint shown once both fields have a value —
     /// a small, free piece of feedback that this is a well-thought-out fuel
@@ -97,7 +97,7 @@ final class AddFuelViewModel: ObservableObject {
 
         var mileage = 0
         let trimmedMileage = mileageText.trimmingCharacters(in: .whitespaces)
-        if let value = Int(trimmedMileage), value >= 0 {
+        if let value = Int(trimmedMileage.filter(\.isNumber)), value >= 0 {
             mileage = value
         } else {
             mileageError = "Geçerli bir kilometre gir."

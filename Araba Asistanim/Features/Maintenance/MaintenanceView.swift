@@ -1,24 +1,26 @@
 import SwiftUI
 
 struct MaintenanceView: View {
-    @State private var records = AppSession.isDemoAccount ? PreviewData.maintenanceRecords : []
+    @EnvironmentObject private var store: GarageStore
     @State private var isShowingAddMaintenance = false
     @State private var isShowingNoVehicleAlert = false
+    @State private var editingRecord: MaintenanceRecord?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// `nil` for every account except the seeded demo — there is no shared
-    /// store yet linking this tab to whatever the Vehicles tab holds, so a
-    /// real vehicle must exist in the one place this phase knows about it.
-    private let vehicle: Vehicle? = AppSession.isDemoAccount ? PreviewData.featuredVehicle : nil
+    /// Shows the vehicle picked in VehicleSwitcherMenu (shared with Home/Analiz).
+    private var vehicle: Vehicle? { store.selectedVehicle }
 
-    private var overdue: [MaintenanceRecord] { records.filter { $0.status == .overdue } }
-    private var dueSoon: [MaintenanceRecord] { records.filter { $0.status == .dueSoon } }
-    private var completed: [MaintenanceRecord] { records.filter { $0.status == .completed } }
+    private var reminders: [MaintenanceRecord] { vehicle.map { store.reminders(for: $0.id) } ?? [] }
+    private var overdue: [MaintenanceRecord] { reminders.filter { $0.status == .overdue } }
+    private var dueSoon: [MaintenanceRecord] { reminders.filter { $0.status == .dueSoon } }
+    private var upcoming: [MaintenanceRecord] { reminders.filter { $0.status == .upcoming } }
+    private var completed: [MaintenanceRecord] { vehicle.map { store.completedMaintenance(for: $0.id) } ?? [] }
+    private var isEmpty: Bool { reminders.isEmpty && completed.isEmpty }
 
     var body: some View {
         NavigationStack {
             Group {
-                if records.isEmpty {
+                if isEmpty {
                     EmptyStateView(
                         systemImage: "wrench.and.screwdriver.fill",
                         title: "Henüz bakım kaydı yok",
@@ -27,6 +29,7 @@ struct MaintenanceView: View {
                     ) {
                         addMaintenanceTapped()
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: AppSpacing.xl) {
@@ -36,9 +39,16 @@ struct MaintenanceView: View {
                             if !dueSoon.isEmpty {
                                 section(title: "Yaklaşanlar", records: dueSoon)
                             }
+                            if !upcoming.isEmpty {
+                                section(title: "Planlı", records: upcoming)
+                            }
                             if !completed.isEmpty {
                                 section(title: "Geçmiş", records: completed)
                             }
+
+                            Text("Planlı bakımlar, son yapılan bakım ve tipik servis aralıklarına (ör. yağ değişimi 10.000 km / 12 ay) göre hesaplanır. Basılı tutarak geçmiş kayıtları düzenleyebilir veya silebilirsin.")
+                                .font(AppTypography.caption)
+                                .foregroundStyle(AppTheme.textSecondary)
                         }
                         .padding(AppSpacing.md)
                     }
@@ -47,6 +57,9 @@ struct MaintenanceView: View {
             .background(AppTheme.groupedBackground)
             .navigationTitle("Bakım")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    VehicleSwitcherMenu()
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         addMaintenanceTapped()
@@ -59,9 +72,14 @@ struct MaintenanceView: View {
                 if let vehicle {
                     AddMaintenanceView(vehicle: vehicle) { record in
                         withAnimation(reduceMotion ? nil : AppAnimation.standard) {
-                            records.append(record)
+                            store.addMaintenance(record)
                         }
                     }
+                }
+            }
+            .sheet(item: $editingRecord) { record in
+                if let vehicle {
+                    AddMaintenanceView(vehicle: vehicle, existingRecord: record) { store.updateMaintenance($0) }
                 }
             }
             .alert("Önce Araç Ekle", isPresented: $isShowingNoVehicleAlert) {
@@ -88,6 +106,28 @@ struct MaintenanceView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(records.enumerated()), id: \.element.id) { index, record in
                         MaintenanceRecordRow(record: record)
+                            .contextMenu {
+                                if record.status == .completed {
+                                    Button {
+                                        editingRecord = record
+                                    } label: {
+                                        Label("Düzenle", systemImage: "pencil")
+                                    }
+                                    Button(role: .destructive) {
+                                        withAnimation(reduceMotion ? nil : AppAnimation.standard) {
+                                            store.deleteMaintenance(record)
+                                        }
+                                    } label: {
+                                        Label("Sil", systemImage: "trash")
+                                    }
+                                } else {
+                                    Button {
+                                        isShowingAddMaintenance = true
+                                    } label: {
+                                        Label("Yapıldı olarak kaydet", systemImage: "checkmark.circle")
+                                    }
+                                }
+                            }
                         if index < records.count - 1 {
                             Divider()
                                 .padding(.leading, AppSizes.iconLarge + AppSpacing.sm)
@@ -120,7 +160,7 @@ private struct MaintenanceRecordRow: View {
                     .font(AppTypography.bodyEmphasized)
                     .foregroundStyle(AppTheme.textPrimary)
 
-                Text("\(record.date.formattedDayMonthYear()) · \(record.mileageKm.formattedMileage())")
+                Text(record.dueSummary)
                     .font(AppTypography.caption)
                     .foregroundStyle(AppTheme.textSecondary)
             }
@@ -136,9 +176,10 @@ private struct MaintenanceRecordRow: View {
             }
         }
         .padding(.vertical, AppSpacing.sm)
+        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
-            "\(record.title), \(record.date.formattedDayMonthYear()), \(record.mileageKm.formattedMileage()), "
+            "\(record.title), \(record.dueSummary), "
             + (record.cost.map { $0.formattedCurrencyTL() } ?? record.status.label)
         )
     }
@@ -146,9 +187,11 @@ private struct MaintenanceRecordRow: View {
 
 #Preview {
     MaintenanceView()
+        .environmentObject(GarageStore.preview)
 }
 
 #Preview("Dark") {
     MaintenanceView()
+        .environmentObject(GarageStore.preview)
         .preferredColorScheme(.dark)
 }

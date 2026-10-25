@@ -30,6 +30,7 @@ final class AuthRepository {
     /// still present in the Keychain. Returns `nil` for a clean, logged-out start.
     func restoreSession() -> (user: User, token: AuthToken)? {
         guard
+            service.hasActiveSession,
             let userData = userDefaults.data(forKey: Key.currentUser),
             let user = try? JSONDecoder().decode(User.self, from: userData),
             let accessToken = try? secureStorage.read(for: Key.accessToken),
@@ -76,7 +77,14 @@ final class AuthRepository {
         try await service.requestPasswordReset(email: email)
     }
 
+    /// Deletes the account on the backend, then clears the local session.
+    func deleteAccount() async throws {
+        try await service.deleteAccount()
+        signOut()
+    }
+
     func signOut() {
+        try? service.signOut()
         try? secureStorage.delete(for: Key.accessToken)
         try? secureStorage.delete(for: Key.refreshToken)
         try? secureStorage.delete(for: Key.expiresAt)

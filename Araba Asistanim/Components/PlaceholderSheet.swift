@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// A generic "coming soon" sheet used to stand in for screens whose real
-/// functionality (record creation, backend integration) isn't implemented yet.
-/// Presented at a medium detent so it reads as a light, native confirmation
+/// A simple icon + title + message sheet (insight details, info rows in
+/// Settings). Presented at a medium detent so it reads as a light, native confirmation
 /// rather than a full navigational push.
 struct PlaceholderSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -14,30 +13,36 @@ struct PlaceholderSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: AppSpacing.lg) {
-                Spacer(minLength: 0)
+                // Scrolls so a long message (e.g. Home's insight detail)
+                // is never truncated at the medium detent.
+                ScrollView {
+                    VStack(spacing: AppSpacing.lg) {
+                        Image(systemName: systemImage)
+                            .font(.system(size: AppSizes.iconLarge))
+                            .foregroundStyle(AppTheme.primary)
+                            .frame(width: 88, height: 88)
+                            .background(AppTheme.primarySubtle)
+                            .clipShape(Circle())
+                            .accessibilityHidden(true)
 
-                Image(systemName: systemImage)
-                    .font(.system(size: AppSizes.iconLarge))
-                    .foregroundStyle(AppTheme.primary)
-                    .frame(width: 88, height: 88)
-                    .background(AppTheme.primarySubtle)
-                    .clipShape(Circle())
-                    .accessibilityHidden(true)
+                        VStack(spacing: AppSpacing.xs) {
+                            Text(title)
+                                .font(AppTypography.title2)
+                                .foregroundStyle(AppTheme.textPrimary)
+                                .multilineTextAlignment(.center)
 
-                VStack(spacing: AppSpacing.xs) {
-                    Text(title)
-                        .font(AppTypography.title2)
-                        .foregroundStyle(AppTheme.textPrimary)
-                        .multilineTextAlignment(.center)
-
-                    Text(message)
-                        .font(AppTypography.body)
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, AppSpacing.lg)
+                            Text(message)
+                                .font(AppTypography.body)
+                                .foregroundStyle(AppTheme.textSecondary)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.horizontal, AppSpacing.lg)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, AppSpacing.md)
                 }
-
-                Spacer(minLength: 0)
+                .scrollBounceBehavior(.basedOnSize)
 
                 PrimaryButton(title: "Anladım") {
                     dismiss()
@@ -53,7 +58,7 @@ struct PlaceholderSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
     }
 }

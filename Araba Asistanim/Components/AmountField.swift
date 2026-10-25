@@ -56,7 +56,8 @@ struct AmountField: View {
     }
 
     /// Keeps only digits and at most one decimal point, capped at two
-    /// fractional digits.
+    /// fractional digits. A comma (the decimal key on Turkish keyboards) is
+    /// stored as a point, so "150,5" means 150.5 rather than 1505.
     private static func sanitize(_ input: String) -> String {
         var result = ""
         var hasDecimal = false
@@ -68,9 +69,9 @@ struct AmountField: View {
                     decimalDigits += 1
                 }
                 result.append(char)
-            } else if char == "." && !hasDecimal {
+            } else if (char == "." || char == ",") && !hasDecimal {
                 hasDecimal = true
-                result.append(char)
+                result.append(".")
             }
         }
         return result

@@ -2,19 +2,21 @@ import SwiftUI
 
 /// A single expense's full detail — amount, category, date, mileage,
 /// service, description, and receipt photo if attached — with edit and
-/// delete actions. Reads the expense by id from the shared `ExpensesViewModel`
-/// rather than holding its own copy, so an edit made here is immediately
-/// reflected if the user navigates back to the list.
+/// delete actions. Reads the entry by id from GarageStore's ledger rather
+/// than holding its own copy, so an edit made here is immediately reflected
+/// if the user navigates back to the list.
 struct ExpenseDetailView: View {
-    @ObservedObject var viewModel: ExpensesViewModel
+    let vehicle: Vehicle
     let expenseID: UUID
+
+    @EnvironmentObject private var store: GarageStore
 
     @Environment(\.dismiss) private var dismiss
     @State private var isShowingEdit = false
     @State private var isShowingDeleteConfirmation = false
 
     private var expense: ExpenseRecord? {
-        viewModel.expenses.first { $0.id == expenseID }
+        store.spending(for: vehicle.id).first { $0.id == expenseID }
     }
 
     private struct Row: Identifiable {
@@ -129,9 +131,7 @@ struct ExpenseDetailView: View {
                     }
                 }
                 .sheet(isPresented: $isShowingEdit) {
-                    AddExpenseView(vehicle: viewModel.vehicle, existingExpense: expense) { updated in
-                        viewModel.updateExpense(updated)
-                    }
+                    LedgerEditSheet(vehicle: vehicle, expense: expense)
                 }
                 .confirmationDialog(
                     "Bu gider silinsin mi?",
@@ -139,7 +139,7 @@ struct ExpenseDetailView: View {
                     titleVisibility: .visible
                 ) {
                     Button("Gideri Sil", role: .destructive) {
-                        viewModel.deleteExpense(expense)
+                        store.deleteSpending(expense)
                         HapticFeedback.success()
                         dismiss()
                     }
@@ -180,18 +180,9 @@ struct ExpenseDetailView: View {
 #Preview {
     NavigationStack {
         ExpenseDetailView(
-            viewModel: ExpensesViewModel(vehicle: PreviewData.vehicles[0]),
-            expenseID: PreviewData.allExpenses[0].id
+            vehicle: PreviewData.vehicles[0],
+            expenseID: PreviewData.allExpenses[3].id
         )
     }
-}
-
-#Preview("Dark") {
-    NavigationStack {
-        ExpenseDetailView(
-            viewModel: ExpensesViewModel(vehicle: PreviewData.vehicles[0]),
-            expenseID: PreviewData.allExpenses[0].id
-        )
-    }
-    .preferredColorScheme(.dark)
+    .environmentObject(GarageStore.preview)
 }

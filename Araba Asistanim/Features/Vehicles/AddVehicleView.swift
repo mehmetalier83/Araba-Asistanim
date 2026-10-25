@@ -67,6 +67,7 @@ struct AddVehicleView: View {
             .navigationTitle("Araç Ekle")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)
+            .keyboardDoneToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("İptal") { dismiss() }

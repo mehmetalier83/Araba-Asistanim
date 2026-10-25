@@ -3,9 +3,14 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var store: GarageStore
     @State private var path = NavigationPath()
     @State private var isShowingNotifications = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var vehicle: Vehicle? { store.selectedVehicle }
+    private var insights: GarageInsights? { vehicle.map { GarageInsights(store: store, vehicle: $0) } }
+    private var recentActivityRecords: [ExpenseRecord] { Array(insights?.spending.prefix(3) ?? []) }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -13,21 +18,21 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
                     header
 
-                    if let vehicle = viewModel.vehicle {
+                    if let vehicle, let insights {
                         VehicleHeroCard(vehicle: vehicle) {
                             path.append(HomeRoute.vehicleDetail(vehicle))
                         }
 
                         quickActions
-                        statRow(vehicle: vehicle)
+                        statRow(vehicle: vehicle, insights: insights)
 
-                        if let item = viewModel.nextMaintenanceItem {
-                            nextServiceBanner(item)
+                        if let item = insights.nextReminder {
+                            nextServiceBanner(item, remaining: insights.remainingKm(to: item))
                         }
 
-                        if !viewModel.recentActivity.isEmpty {
+                        if !recentActivityRecords.isEmpty {
                             recentActivity
-                            aiInsight
+                            aiInsight(insights)
                         }
                     } else {
                         emptyGarageCard
@@ -44,52 +49,42 @@ struct HomeView: View {
                 case .settings:
                     SettingsView()
                 case .vehicleDetail(let vehicle):
-                    VehicleDetailView(vehicle: vehicle)
+                    VehicleDetailView(vehicleID: vehicle.id)
                 case .expenses(let vehicle):
                     ExpensesListView(vehicle: vehicle)
                 }
             }
             .sheet(item: $viewModel.activeQuickAction) { action in
-                if let vehicle = viewModel.vehicle, action == .addExpense {
-                    AddExpenseView(vehicle: vehicle) { expense in
-                        viewModel.recordExpense(expense)
+                if let vehicle {
+                    switch action {
+                    case .addExpense:
+                        AddExpenseView(vehicle: vehicle) { store.addExpense($0) }
+                    case .addFuel:
+                        AddFuelView(vehicle: vehicle) { store.addFuel($0) }
+                    case .addMaintenance:
+                        AddMaintenanceView(vehicle: vehicle) { store.addMaintenance($0) }
                     }
-                } else if let vehicle = viewModel.vehicle, action == .addFuel {
-                    AddFuelView(vehicle: vehicle) { fuelRecord in
-                        viewModel.recordFuel(fuelRecord)
-                    }
-                } else if let vehicle = viewModel.vehicle, action == .addMaintenance {
-                    AddMaintenanceView(vehicle: vehicle) { record in
-                        viewModel.recordMaintenance(record)
-                    }
-                } else {
-                    PlaceholderSheet(
-                        systemImage: action.systemImage,
-                        title: action.title,
-                        message: action.placeholderMessage
-                    )
                 }
             }
             .sheet(isPresented: $viewModel.isShowingAddVehicle) {
                 AddVehicleView { vehicle in
                     withAnimation(reduceMotion ? nil : AppAnimation.standard) {
-                        viewModel.setFeaturedVehicle(vehicle)
+                        store.addVehicle(vehicle)
+                        store.selectedVehicleID = vehicle.id
                     }
                 }
             }
             .sheet(isPresented: $viewModel.isShowingInsightDetail) {
                 PlaceholderSheet(
                     systemImage: "sparkles",
-                    title: "Yakıt Tüketimi Analizi",
-                    message: viewModel.aiInsightDetail
+                    title: "Araç Analizi",
+                    message: insights?.detail ?? ""
                 )
             }
             .sheet(isPresented: $isShowingNotifications) {
-                PlaceholderSheet(
-                    systemImage: "bell.fill",
-                    title: "Bildirimler",
-                    message: "Bildirimler henüz eklenmedi. Bu özellik ileride kullanılabilir olacak."
-                )
+                NotificationsSheet(reminders: store.attentionReminders) {
+                    appState.selectedTab = .maintenance
+                }
             }
         }
     }
@@ -99,13 +94,15 @@ struct HomeView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Günaydın,")
+                Text(HomeViewModel.greeting())
                     .font(AppTypography.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
 
-                Text(viewModel.vehicle.map { "\($0.make)'in hazır 👋" } ?? "Hoş geldin 👋")
+                Text(vehicle.map { "\($0.make) hazır 👋" } ?? "Hoş geldin 👋")
                     .font(AppTypography.title)
                     .foregroundStyle(AppTheme.textPrimary)
+
+                VehicleSwitcherMenu()
             }
 
             Spacer()
@@ -115,9 +112,11 @@ struct HomeView: View {
                     IconButton(systemImage: "bell.fill", accessibilityLabel: "Bildirimler") {
                         isShowingNotifications = true
                     }
-                    BadgeView()
-                        .offset(x: -6, y: 6)
-                        .allowsHitTesting(false)
+                    if !store.attentionReminders.isEmpty {
+                        BadgeView(count: store.attentionReminders.count)
+                            .offset(x: -2, y: 2)
+                            .allowsHitTesting(false)
+                    }
                 }
 
                 IconButton(systemImage: "gearshape.fill", accessibilityLabel: "Ayarlar") {
@@ -212,20 +211,21 @@ struct HomeView: View {
 
     // MARK: - Stat row
 
-    private func statRow(vehicle: Vehicle) -> some View {
-        HStack(spacing: AppSpacing.sm) {
+    private func statRow(vehicle: Vehicle, insights: GarageInsights) -> some View {
+        let consumption = insights.latestConsumption
+        return HStack(spacing: AppSpacing.sm) {
             FuelTrendCard(
-                value: viewModel.fuelConsumptionText,
-                changePercent: viewModel.fuelConsumptionChangePercent,
-                history: viewModel.fuelHistory
+                value: consumption?.value.formattedFuelConsumption() ?? "—",
+                changePercent: consumption?.changePercent ?? 0,
+                history: Array(insights.monthlyConsumption(months: 6).suffix(6))
             ) {
                 appState.selectedTab = .analytics
             }
 
             ExpenseBreakdownCard(
-                value: viewModel.monthlyExpensesText,
-                changePercent: viewModel.monthlyExpensesChangePercent,
-                breakdown: viewModel.expenseBreakdown
+                value: insights.thisMonthTotal.formattedCurrencyTL(),
+                changePercent: insights.monthlySpendingChangePercent,
+                breakdown: insights.thisMonthBreakdown
             ) {
                 path.append(HomeRoute.expenses(vehicle))
             }
@@ -234,12 +234,13 @@ struct HomeView: View {
 
     // MARK: - Next service
 
-    private func nextServiceBanner(_ item: MaintenanceRecord) -> some View {
+    private func nextServiceBanner(_ item: MaintenanceRecord, remaining: Int) -> some View {
         let tone = item.status.tagTone
-        let remaining = viewModel.nextServiceRemainingKm
-        let mileageLine = remaining > 0
-            ? "\(remaining.formattedMileage()) kaldı"
-            : "\(abs(remaining).formattedMileage()) geçti"
+        let mileageLine = !item.tracksMileage
+            ? item.status.label
+            : remaining > 0
+                ? "\(remaining.formattedMileage()) kaldı"
+                : "\(abs(remaining).formattedMileage()) geçti"
 
         return Button {
             appState.selectedTab = .maintenance
@@ -296,9 +297,9 @@ struct HomeView: View {
 
             CardView {
                 VStack(spacing: AppSpacing.sm) {
-                    ForEach(Array(viewModel.recentActivity.enumerated()), id: \.element.id) { index, record in
+                    ForEach(Array(recentActivityRecords.enumerated()), id: \.element.id) { index, record in
                         ActivityRow(record: record)
-                        if index < viewModel.recentActivity.count - 1 {
+                        if index < recentActivityRecords.count - 1 {
                             Divider()
                         }
                     }
@@ -309,7 +310,7 @@ struct HomeView: View {
 
     // MARK: - AI insight
 
-    private var aiInsight: some View {
+    private func aiInsight(_ insights: GarageInsights) -> some View {
         Button {
             viewModel.isShowingInsightDetail = true
         } label: {
@@ -320,7 +321,7 @@ struct HomeView: View {
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(viewModel.aiInsightMessage)
+                    Text(insights.headline)
                         .font(AppTypography.subheadline)
                         .foregroundStyle(AppTheme.textPrimary)
                         .multilineTextAlignment(.leading)
@@ -337,7 +338,7 @@ struct HomeView: View {
             .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous))
         }
         .buttonStyle(.appPressScale)
-        .accessibilityLabel("AI Analizi: \(viewModel.aiInsightMessage)")
+        .accessibilityLabel("AI Analizi: \(insights.headline)")
         .accessibilityHint("Detayları gör")
     }
 }
@@ -345,10 +346,12 @@ struct HomeView: View {
 #Preview {
     HomeView()
         .environmentObject(AppState())
+        .environmentObject(GarageStore.preview)
 }
 
 #Preview("Dark") {
     HomeView()
         .environmentObject(AppState())
+        .environmentObject(GarageStore.preview)
         .preferredColorScheme(.dark)
 }

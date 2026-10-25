@@ -44,7 +44,7 @@ final class AddMaintenanceViewModel: ObservableObject {
         }
     }
 
-    var costValue: Double { Double(costText) ?? 0 }
+    var costValue: Double { costText.decimalValue ?? 0 }
 
     func clearCategoryError() { categoryError = nil }
     func clearCostError() { costError = nil }
@@ -89,7 +89,7 @@ final class AddMaintenanceViewModel: ObservableObject {
 
         var mileage = 0
         let trimmedMileage = mileageText.trimmingCharacters(in: .whitespaces)
-        if let value = Int(trimmedMileage), value >= 0 {
+        if let value = Int(trimmedMileage.filter(\.isNumber)), value >= 0 {
             mileage = value
         } else {
             mileageError = "Geçerli bir kilometre gir."

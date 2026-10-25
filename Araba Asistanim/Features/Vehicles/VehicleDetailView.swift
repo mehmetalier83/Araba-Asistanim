@@ -1,23 +1,31 @@
 import SwiftUI
 
-/// A temporary vehicle detail screen. All fields are mock data in this phase.
-/// `onDelete` is only supplied when reached from the Vehicles tab (where the
-/// owning list can actually remove it) — Home's shortcut push leaves it nil,
-/// so no delete affordance appears there.
+/// One vehicle's specs and expense summary. Reads the vehicle live from
+/// GarageStore by id, so mileage bumped by a new record shows up immediately.
+/// `allowsDelete` is only set from the Vehicles tab (Home's shortcut push
+/// leaves it off, so no delete affordance appears there).
 struct VehicleDetailView: View {
-    let vehicle: Vehicle
-    var onDelete: (() -> Void)? = nil
+    let vehicleID: UUID
+    var allowsDelete = false
 
-    @StateObject private var expensesViewModel: ExpensesViewModel
+    @EnvironmentObject private var store: GarageStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isShowingDeleteConfirmation = false
     @State private var isShowingAddExpense = false
+    @State private var isShowingMileageEditor = false
+    @State private var mileageDraft = ""
 
-    init(vehicle: Vehicle, onDelete: (() -> Void)? = nil) {
-        self.vehicle = vehicle
-        self.onDelete = onDelete
-        _expensesViewModel = StateObject(wrappedValue: ExpensesViewModel(vehicle: vehicle))
+    var body: some View {
+        if let vehicle = store.vehicle(withID: vehicleID) {
+            content(for: vehicle)
+        } else {
+            EmptyStateView(
+                systemImage: "car.fill",
+                title: "Araç bulunamadı",
+                message: "Bu araç silinmiş olabilir."
+            )
+        }
     }
 
     private struct Row: Identifiable {
@@ -27,7 +35,7 @@ struct VehicleDetailView: View {
         let value: String
     }
 
-    private var rows: [Row] {
+    private func rows(for vehicle: Vehicle) -> [Row] {
         [
             Row(systemImage: "tag.fill", label: "Marka", value: vehicle.make),
             Row(systemImage: "car.fill", label: "Model", value: vehicle.model),
@@ -39,10 +47,13 @@ struct VehicleDetailView: View {
         ]
     }
 
-    var body: some View {
-        ScrollView {
+    private func content(for vehicle: Vehicle) -> some View {
+        let rows = rows(for: vehicle)
+        let insights = GarageInsights(store: store, vehicle: vehicle)
+
+        return ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                header
+                header(for: vehicle)
 
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     SectionHeader(title: "Teknik Özellikler")
@@ -79,7 +90,7 @@ struct VehicleDetailView: View {
                     }
                 }
 
-                expensesSection
+                expensesSection(for: vehicle, insights: insights)
             }
             .padding(.horizontal, AppSpacing.md)
             .padding(.bottom, AppSpacing.xl)
@@ -90,12 +101,21 @@ struct VehicleDetailView: View {
         .sheet(isPresented: $isShowingAddExpense) {
             AddExpenseView(vehicle: vehicle) { expense in
                 withAnimation(reduceMotion ? nil : AppAnimation.standard) {
-                    expensesViewModel.addExpense(expense)
+                    store.addExpense(expense)
                 }
             }
         }
         .toolbar {
-            if onDelete != nil {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    mileageDraft = String(vehicle.mileageKm)
+                    isShowingMileageEditor = true
+                } label: {
+                    Image(systemName: "gauge.with.dots.needle.67percent")
+                }
+                .accessibilityLabel("Kilometreyi Güncelle")
+            }
+            if allowsDelete {
                 ToolbarItem(placement: .primaryAction) {
                     Button(role: .destructive) {
                         isShowingDeleteConfirmation = true
@@ -112,19 +132,33 @@ struct VehicleDetailView: View {
             titleVisibility: .visible
         ) {
             Button("Aracı Sil", role: .destructive) {
-                onDelete?()
+                store.deleteVehicle(vehicle)
                 HapticFeedback.success()
                 dismiss()
             }
             Button("Vazgeç", role: .cancel) {}
         } message: {
-            Text("Bu işlem geri alınamaz.")
+            Text("Araç ve ona ait tüm yakıt, bakım ve gider kayıtları silinir. Bu işlem geri alınamaz.")
+        }
+        .alert("Kilometreyi Güncelle", isPresented: $isShowingMileageEditor) {
+            TextField("Güncel kilometre", text: $mileageDraft)
+                .keyboardType(.numberPad)
+            Button("Kaydet") {
+                guard let value = Int(mileageDraft.filter(\.isNumber)), value >= 0 else { return }
+                var updated = vehicle
+                updated.mileageKm = value
+                store.updateVehicle(updated)
+                HapticFeedback.success()
+            }
+            Button("Vazgeç", role: .cancel) {}
+        } message: {
+            Text("Aracının göstergesindeki güncel kilometreyi gir.")
         }
     }
 
     // MARK: - Expenses
 
-    private var expensesSection: some View {
+    private func expensesSection(for vehicle: Vehicle, insights: GarageInsights) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
             HStack {
                 Text("Giderler")
@@ -148,7 +182,7 @@ struct VehicleDetailView: View {
             }
 
             NavigationLink {
-                ExpensesListView(vehicle: vehicle, viewModel: expensesViewModel)
+                ExpensesListView(vehicle: vehicle)
             } label: {
                 CardView {
                     VStack(alignment: .leading, spacing: AppSpacing.sm) {
@@ -164,11 +198,11 @@ struct VehicleDetailView: View {
                                 .foregroundStyle(AppTheme.textTertiary)
                         }
 
-                        Text(expensesViewModel.thisMonthTotal.formattedCurrencyTL())
+                        Text(insights.thisMonthTotal.formattedCurrencyTL())
                             .font(AppTypography.valueEmphasis)
                             .foregroundStyle(AppTheme.textPrimary)
 
-                        if let latest = expensesViewModel.latestExpense {
+                        if let latest = insights.spending.first {
                             HStack(spacing: 6) {
                                 Image(systemName: latest.category.systemImage)
                                     .font(.system(size: 11))
@@ -189,12 +223,12 @@ struct VehicleDetailView: View {
             }
             .buttonStyle(.appPressScale)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Giderler, bu ay \(expensesViewModel.thisMonthTotal.formattedCurrencyTL())")
+            .accessibilityLabel("Giderler, bu ay \(insights.thisMonthTotal.formattedCurrencyTL())")
             .accessibilityHint("Tüm giderleri gör")
         }
     }
 
-    private var header: some View {
+    private func header(for vehicle: Vehicle) -> some View {
         ZStack(alignment: .bottomLeading) {
             LinearGradient.graphiteSurface()
 
@@ -238,13 +272,15 @@ struct VehicleDetailView: View {
 
 #Preview {
     NavigationStack {
-        VehicleDetailView(vehicle: PreviewData.vehicles[0])
+        VehicleDetailView(vehicleID: PreviewData.vehicles[0].id, allowsDelete: true)
     }
+    .environmentObject(GarageStore.preview)
 }
 
 #Preview("Dark") {
     NavigationStack {
-        VehicleDetailView(vehicle: PreviewData.vehicles[0])
+        VehicleDetailView(vehicleID: PreviewData.vehicles[0].id)
     }
+    .environmentObject(GarageStore.preview)
     .preferredColorScheme(.dark)
 }

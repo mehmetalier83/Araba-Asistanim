@@ -13,6 +13,20 @@ private let groupedNumberFormatter: NumberFormatter = {
     return formatter
 }()
 
+/// Like `groupedNumberFormatter`, but keeps up to two decimals (kuruş) when
+/// an amount has them, e.g. `125.5` → `"125.5"`, while `7850` stays `"7,850"`.
+private let currencyNumberFormatter: NumberFormatter = {
+    let formatter = NumberFormatter()
+    formatter.numberStyle = .decimal
+    formatter.groupingSeparator = ","
+    formatter.decimalSeparator = "."
+    formatter.usesGroupingSeparator = true
+    formatter.minimumFractionDigits = 0
+    formatter.maximumFractionDigits = 2
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    return formatter
+}()
+
 extension Int {
     /// Formats a mileage value, e.g. `120450` → `"120,450 km"`.
     func formattedMileage() -> String {
@@ -24,7 +38,7 @@ extension Int {
 extension Double {
     /// Formats a monetary value, e.g. `7850` → `"7,850 TL"`.
     func formattedCurrencyTL() -> String {
-        let number = groupedNumberFormatter.string(from: NSNumber(value: self)) ?? "\(self)"
+        let number = currencyNumberFormatter.string(from: NSNumber(value: self)) ?? "\(self)"
         return "\(number) TL"
     }
 

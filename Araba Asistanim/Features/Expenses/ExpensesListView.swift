@@ -2,13 +2,12 @@ import SwiftUI
 
 /// One vehicle's full expense ledger: a premium summary row, then every
 /// expense grouped by day (newest first), with swipe-to-edit / swipe-to-
-/// delete. Accepts an existing `ExpensesViewModel` so Vehicle Detail's
-/// embedded Expenses section and this full list can share one in-memory
-/// ledger for the lifetime of that navigation stack.
+/// delete. Reads the unified ledger (expenses + fuel + completed
+/// maintenance) from GarageStore, so it's always in sync with every tab.
 struct ExpensesListView: View {
     let vehicle: Vehicle
 
-    @StateObject private var viewModel: ExpensesViewModel
+    @EnvironmentObject private var store: GarageStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var isShowingAddExpense = false
@@ -16,13 +15,14 @@ struct ExpensesListView: View {
 
     private let summaryColumns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
 
-    init(vehicle: Vehicle, viewModel: ExpensesViewModel? = nil) {
-        self.vehicle = vehicle
-        _viewModel = StateObject(wrappedValue: viewModel ?? ExpensesViewModel(vehicle: vehicle))
+    private var insights: GarageInsights { GarageInsights(store: store, vehicle: vehicle) }
+    private var expenses: [ExpenseRecord] { store.spending(for: vehicle.id) }
+    private var thisMonthExpenses: [ExpenseRecord] {
+        expenses.filter { Calendar.current.isDate($0.date, equalTo: .now, toGranularity: .month) }
     }
 
     private var groupedExpenses: [(header: String, records: [ExpenseRecord])] {
-        let sorted = viewModel.expenses.sorted { $0.date > $1.date }
+        let sorted = expenses.sorted { $0.date > $1.date }
         let groups = Dictionary(grouping: sorted) { Calendar.current.startOfDay(for: $0.date) }
         return groups.keys.sorted(by: >).map { day in
             (header: day.formattedListSectionHeader(), records: groups[day] ?? [])
@@ -31,7 +31,7 @@ struct ExpensesListView: View {
 
     var body: some View {
         Group {
-            if viewModel.expenses.isEmpty {
+            if expenses.isEmpty {
                 EmptyStateView(
                     systemImage: "creditcard.fill",
                     title: "Henüz gider yok",
@@ -54,7 +54,7 @@ struct ExpensesListView: View {
                         Section {
                             ForEach(group.records) { expense in
                                 NavigationLink {
-                                    ExpenseDetailView(viewModel: viewModel, expenseID: expense.id)
+                                    ExpenseDetailView(vehicle: vehicle, expenseID: expense.id)
                                 } label: {
                                     ExpenseRowView(expense: expense)
                                 }
@@ -62,7 +62,7 @@ struct ExpensesListView: View {
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button(role: .destructive) {
                                         withAnimation(reduceMotion ? nil : AppAnimation.standard) {
-                                            viewModel.deleteExpense(expense)
+                                            store.deleteSpending(expense)
                                         }
                                         HapticFeedback.success()
                                     } label: {
@@ -104,36 +104,32 @@ struct ExpensesListView: View {
         .sheet(isPresented: $isShowingAddExpense) {
             AddExpenseView(vehicle: vehicle) { expense in
                 withAnimation(reduceMotion ? nil : AppAnimation.standard) {
-                    viewModel.addExpense(expense)
+                    store.addExpense(expense)
                 }
             }
         }
         .sheet(item: $editingExpense) { expense in
-            AddExpenseView(vehicle: vehicle, existingExpense: expense) { updated in
-                withAnimation(reduceMotion ? nil : AppAnimation.standard) {
-                    viewModel.updateExpense(updated)
-                }
-            }
+            LedgerEditSheet(vehicle: vehicle, expense: expense)
         }
     }
 
     private var summaryRow: some View {
         LazyVGrid(columns: summaryColumns, spacing: AppSpacing.sm) {
             StatisticCard(statistic: Statistic(
-                title: "Bu Ay · \(viewModel.thisMonthExpenses.count) işlem",
-                value: viewModel.thisMonthTotal.formattedCurrencyTL(),
+                title: "Bu Ay · \(thisMonthExpenses.count) işlem",
+                value: insights.thisMonthTotal.formattedCurrencyTL(),
                 systemImage: "calendar"
             ))
 
             StatisticCard(statistic: Statistic(
                 title: "Bu Yıl",
-                value: viewModel.thisYearTotal.formattedCurrencyTL(),
+                value: insights.thisYearTotal.formattedCurrencyTL(),
                 systemImage: "chart.bar.fill"
             ))
 
             StatisticCard(statistic: Statistic(
                 title: "Toplam",
-                value: viewModel.allTimeTotal.formattedCurrencyTL(),
+                value: insights.allTimeTotal.formattedCurrencyTL(),
                 systemImage: "banknote.fill"
             ))
         }
@@ -194,17 +190,20 @@ private struct ExpenseRowView: View {
     NavigationStack {
         ExpensesListView(vehicle: PreviewData.vehicles[0])
     }
+    .environmentObject(GarageStore.preview)
 }
 
 #Preview("Dark") {
     NavigationStack {
         ExpensesListView(vehicle: PreviewData.vehicles[0])
     }
+    .environmentObject(GarageStore.preview)
     .preferredColorScheme(.dark)
 }
 
 #Preview("Empty") {
     NavigationStack {
-        ExpensesListView(vehicle: PreviewData.vehicles[0], viewModel: ExpensesViewModel(vehicle: PreviewData.vehicles[0], expenses: []))
+        ExpensesListView(vehicle: PreviewData.vehicles[0])
     }
+    .environmentObject(GarageStore(userID: "empty", repository: InMemoryGarageRepository()))
 }

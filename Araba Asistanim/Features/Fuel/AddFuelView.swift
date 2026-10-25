@@ -57,7 +57,7 @@ struct AddFuelView: View {
                     section(title: "Yakıt Bilgisi") {
                         AppTextField(
                             title: "Litre",
-                            placeholder: "42.5",
+                            placeholder: "42,5",
                             text: $viewModel.litersText,
                             icon: "fuelpump.fill",
                             keyboardType: .decimalPad,
@@ -113,6 +113,7 @@ struct AddFuelView: View {
             .navigationTitle(isEditing ? "Yakıtı Düzenle" : "Yakıt Ekle")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)
+            .keyboardDoneToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("İptal") { dismiss() }

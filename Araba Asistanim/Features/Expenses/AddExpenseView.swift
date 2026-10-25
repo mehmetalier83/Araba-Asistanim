@@ -108,6 +108,7 @@ struct AddExpenseView: View {
             .navigationTitle(isEditing ? "Gideri Düzenle" : "Gider Ekle")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)
+            .keyboardDoneToolbar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("İptal") { dismiss() }

@@ -11,12 +11,16 @@ import SwiftUI
 struct Araba_AsistanimApp: App {
     @StateObject private var appState = AppState()
     @StateObject private var authViewModel: AuthViewModel
+    @AppStorage(AppearancePreference.storageKey) private var appearance = AppearancePreference.system
 
     init() {
-        // MockAuthService stands in for the real ASP.NET backend until it
-        // exists — swapping it out later means changing this one line.
+        // Firebase Auth is used once GoogleService-Info.plist is in the app
+        // bundle; until then MockAuthService keeps the app fully usable.
+        let service: AuthServiceProtocol = FirebaseBootstrap.configureIfAvailable()
+            ? FirebaseAuthService()
+            : MockAuthService()
         let repository = AuthRepository(
-            service: MockAuthService(),
+            service: service,
             secureStorage: KeychainService()
         )
         _authViewModel = StateObject(wrappedValue: AuthViewModel(repository: repository))
@@ -27,6 +31,7 @@ struct Araba_AsistanimApp: App {
             AppRootView()
                 .environmentObject(appState)
                 .environmentObject(authViewModel)
+                .preferredColorScheme(appearance.colorScheme)
         }
     }
 }

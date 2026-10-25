@@ -12,7 +12,7 @@ final class MockAuthService: AuthServiceProtocol {
 
     private var accounts: [String: StoredAccount] = [
         "demo@carlogai.com": StoredAccount(
-            user: User(id: UUID(), firstName: "Demo", lastName: "Sürücü", email: "demo@carlogai.com"),
+            user: User(id: UUID().uuidString, firstName: "Demo", lastName: "Sürücü", email: "demo@carlogai.com"),
             password: "Password1"
         )
     ]
@@ -37,8 +37,8 @@ final class MockAuthService: AuthServiceProtocol {
             throw AuthError.weakPassword
         }
 
-        let (firstName, lastName) = Self.displayName(fromEmail: email)
-        let user = User(id: UUID(), firstName: firstName, lastName: lastName, email: email)
+        let (firstName, lastName) = User.displayName(fromEmail: email)
+        let user = User(id: UUID().uuidString, firstName: firstName, lastName: lastName, email: email)
         accounts[key] = StoredAccount(user: user, password: password)
         return (user, Self.makeToken())
     }
@@ -69,6 +69,12 @@ final class MockAuthService: AuthServiceProtocol {
         ), Self.makeToken())
     }
 
+    func signOut() throws {}
+
+    func deleteAccount() async throws {
+        try await simulateLatency()
+    }
+
     func requestPasswordReset(email: String) async throws {
         try await simulateLatency()
         // Intentionally succeeds even for unknown emails, matching real-world
@@ -83,7 +89,7 @@ final class MockAuthService: AuthServiceProtocol {
         if let existing = accounts[key] {
             return existing.user
         }
-        let user = User(id: UUID(), firstName: firstName, lastName: lastName, email: email)
+        let user = User(id: UUID().uuidString, firstName: firstName, lastName: lastName, email: email)
         accounts[key] = StoredAccount(user: user, password: nil)
         return user
     }
@@ -98,22 +104,6 @@ final class MockAuthService: AuthServiceProtocol {
             refreshToken: "mock-refresh-\(UUID().uuidString)",
             expiresAt: .now.addingTimeInterval(3600)
         )
-    }
-
-    /// Turns "ayse.yilmaz@example.com" into ("Ayse", "Yilmaz") — a reasonable
-    /// placeholder display name derived purely from the email, since
-    /// registration no longer asks for one.
-    private static func displayName(fromEmail email: String) -> (first: String, last: String) {
-        let localPart = email.split(separator: "@").first.map(String.init) ?? email
-        let parts = localPart
-            .split(whereSeparator: { ".-_+".contains($0) })
-            .map { $0.prefix(1).uppercased() + $0.dropFirst() }
-
-        guard let first = parts.first, !first.isEmpty else {
-            return ("Kullanıcı", "")
-        }
-        let last = parts.dropFirst().joined(separator: " ")
-        return (first, last)
     }
 }
 

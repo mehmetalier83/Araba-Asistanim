@@ -1,14 +1,14 @@
 import SwiftUI
 
-/// A single expense entry tied to one vehicle. All instances in this phase are
-/// mock/preview data — there is no backend or persistence yet, matching the
-/// rest of the app's current phase.
+/// A single expense entry tied to one vehicle, persisted through `GarageStore`.
+/// Fuel fill-ups and completed maintenance also surface as expenses in the
+/// ledger (see `GarageStore.spending(for:)`), sharing their source record's id.
 ///
 /// Shaped so a future AI-analysis layer can work directly off this model
 /// without a redesign: every record carries a category, a vehicle, a date,
 /// and a mileage snapshot, which is enough to compute trends ("12% more on
 /// fuel this month") or cost-per-km without additional joins.
-struct ExpenseRecord: Identifiable, Hashable {
+struct ExpenseRecord: Identifiable, Hashable, Codable {
     let id: UUID
     var vehicleID: UUID
     var category: ExpenseCategory
@@ -51,7 +51,7 @@ struct ExpenseRecord: Identifiable, Hashable {
     }
 }
 
-enum ExpenseCategory: String, CaseIterable, Hashable {
+enum ExpenseCategory: String, CaseIterable, Hashable, Codable {
     case fuel
     case maintenance
     case tires

@@ -10,12 +10,16 @@ struct SettingsView: View {
     }
 
     @EnvironmentObject private var authViewModel: AuthViewModel
+    @EnvironmentObject private var store: GarageStore
     @State private var isShowingLogoutConfirmation = false
+    @State private var isShowingDeleteConfirmation = false
+    @State private var isDeletingAccount = false
+    @State private var deleteErrorMessage: String?
     @State private var activeRow: Row?
+    @AppStorage(AppearancePreference.storageKey) private var appearance = AppearancePreference.system
 
     private let preferenceRows = [
         Row(title: "Dil", systemImage: "globe", value: "Türkçe", message: "Dil seçenekleri yakında eklenecek. Uygulama şu an Türkçe olarak sunuluyor."),
-        Row(title: "Görünüm", systemImage: "circle.lefthalf.filled", message: "Açık/koyu tema tercihi yakında eklenecek. Şu an sistem ayarını takip ediyor."),
         Row(title: "Bildirimler", systemImage: "bell.fill", message: "Bildirim tercihleri henüz eklenmedi. Bu özellik ileride kullanılabilir olacak."),
         Row(title: "Birimler", systemImage: "ruler.fill", message: "Mesafe birimi tercihi henüz eklenmedi. Şu an kilometre kullanılıyor."),
         Row(title: "Para Birimi", systemImage: "banknote.fill", message: "Para birimi tercihi henüz eklenmedi. Şu an Türk Lirası kullanılıyor.")
@@ -37,6 +41,7 @@ struct SettingsView: View {
             }
 
             Section("Tercihler") {
+                appearancePicker
                 ForEach(preferenceRows) { row in
                     SettingsRowView(row: row) { activeRow = row }
                 }
@@ -60,6 +65,25 @@ struct SettingsView: View {
                     }
                 }
             }
+
+            Section {
+                Button(role: .destructive) {
+                    isShowingDeleteConfirmation = true
+                } label: {
+                    HStack {
+                        Spacer()
+                        if isDeletingAccount {
+                            ProgressView()
+                        } else {
+                            Text("Hesabı Sil")
+                        }
+                        Spacer()
+                    }
+                }
+                .disabled(isDeletingAccount)
+            } footer: {
+                Text("Hesabın ve tüm araç, yakıt, bakım ve gider kayıtların kalıcı olarak silinir.")
+            }
         }
         .navigationTitle("Ayarlar")
         .navigationBarTitleDisplayMode(.inline)
@@ -73,8 +97,66 @@ struct SettingsView: View {
             }
             Button("Vazgeç", role: .cancel) {}
         }
+        .confirmationDialog(
+            "Hesabını silmek istediğine emin misin?",
+            isPresented: $isShowingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Hesabı Kalıcı Olarak Sil", role: .destructive) {
+                Task { await deleteAccount() }
+            }
+            Button("Vazgeç", role: .cancel) {}
+        } message: {
+            Text("Bu işlem geri alınamaz.")
+        }
+        .alert(
+            "Hesap silinemedi",
+            isPresented: Binding(get: { deleteErrorMessage != nil }, set: { if !$0 { deleteErrorMessage = nil } })
+        ) {
+            Button("Tamam", role: .cancel) {}
+        } message: {
+            Text(deleteErrorMessage ?? "")
+        }
         .sheet(item: $activeRow) { row in
             PlaceholderSheet(systemImage: row.systemImage, title: row.title, message: row.message)
+        }
+    }
+
+    private var appearancePicker: some View {
+        Picker(selection: $appearance) {
+            ForEach(AppearancePreference.allCases) { option in
+                Text(option.title).tag(option)
+            }
+        } label: {
+            HStack(spacing: AppSpacing.sm) {
+                Image(systemName: "circle.lefthalf.filled")
+                    .font(.system(size: AppSizes.iconXSmall))
+                    .foregroundStyle(AppTheme.primary)
+                    .frame(width: AppSizes.iconLarge, height: AppSizes.iconLarge)
+                    .background(AppTheme.primarySubtle)
+                    .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.small, style: .continuous))
+                    .accessibilityHidden(true)
+
+                Text("Görünüm")
+                    .font(AppTypography.body)
+                    .foregroundStyle(AppTheme.textPrimary)
+            }
+        }
+        .pickerStyle(.menu)
+        .padding(.vertical, AppSpacing.xxs)
+    }
+
+    private func deleteAccount() async {
+        isDeletingAccount = true
+        defer { isDeletingAccount = false }
+        do {
+            // Records go first: deleting them needs the account to still exist.
+            try await store.deleteAllData()
+            try await authViewModel.deleteAccount()
+            HapticFeedback.success()
+        } catch {
+            deleteErrorMessage = (error as? AuthError)?.errorDescription ?? AuthError.unknown.errorDescription
+            HapticFeedback.error()
         }
     }
 
@@ -156,6 +238,7 @@ struct SettingsView: View {
         service: MockAuthService(),
         secureStorage: InMemorySecureStorage()
     )))
+    .environmentObject(GarageStore.preview)
 }
 
 #Preview("Dark") {
@@ -166,5 +249,6 @@ struct SettingsView: View {
         service: MockAuthService(),
         secureStorage: InMemorySecureStorage()
     )))
+    .environmentObject(GarageStore.preview)
     .preferredColorScheme(.dark)
 }

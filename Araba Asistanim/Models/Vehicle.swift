@@ -1,12 +1,13 @@
 import Foundation
 
-/// A vehicle owned by the user. All instances in this phase are mock/preview data.
-struct Vehicle: Identifiable, Hashable {
+/// A vehicle owned by the user, persisted through `GarageStore`.
+struct Vehicle: Identifiable, Hashable, Codable {
     let id: UUID
     let make: String
     let model: String
     let year: Int
-    let mileageKm: Int
+    /// Bumped automatically whenever a newer record logs a higher odometer reading.
+    var mileageKm: Int
     let fuelType: FuelType
     let engine: String
     let transmission: String
@@ -34,7 +35,7 @@ struct Vehicle: Identifiable, Hashable {
     }
 }
 
-enum FuelType: String, CaseIterable, Hashable {
+enum FuelType: String, CaseIterable, Hashable, Codable {
     case gasoline
     case diesel
     case hybrid

@@ -1,7 +1,7 @@
 import Charts
 import SwiftUI
 
-/// A bar chart of monthly expenses. Mock data only.
+/// A bar chart of monthly expenses.
 struct MonthlyExpensesChartView: View {
     let data: [MonthlyValue]
 
@@ -16,6 +16,7 @@ struct MonthlyExpensesChartView: View {
                 Text(point.value, format: .number.precision(.fractionLength(0)))
                     .font(.caption2)
                     .foregroundStyle(AppTheme.textSecondary)
+                    .opacity(data.count <= 6 ? 1 : 0)
                     .accessibilityHidden(true)
             }
         }

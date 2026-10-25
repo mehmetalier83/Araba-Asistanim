@@ -10,8 +10,9 @@ struct AppRootView: View {
 
     var body: some View {
         Group {
-            if authViewModel.currentUser != nil {
-                MainTabView()
+            if let user = authViewModel.currentUser {
+                SessionRootView(user: user)
+                    .id(user.id)
             } else if !hasSeenOnboarding {
                 OnboardingView {
                     hasSeenOnboarding = true

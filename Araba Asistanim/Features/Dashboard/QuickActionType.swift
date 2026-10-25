@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// A quick-action shortcut on the Home dashboard. Selecting one shows a
-/// placeholder sheet in this phase — no record is actually created yet.
+/// A quick-action shortcut on the Home dashboard. Each one opens its Add
+/// sheet (fuel, expense or maintenance) for the featured vehicle.
 enum QuickActionType: String, CaseIterable, Identifiable {
     case addFuel
     case addExpense
@@ -23,10 +23,6 @@ enum QuickActionType: String, CaseIterable, Identifiable {
         case .addExpense: return "creditcard.fill"
         case .addMaintenance: return "wrench.and.screwdriver.fill"
         }
-    }
-
-    var placeholderMessage: String {
-        "\(title) özelliği henüz eklenmedi. Backend entegrasyonu tamamlandığında kayıt oluşturma kullanılabilir olacak."
     }
 
     /// Each action gets a distinct tint (reusing the existing semantic

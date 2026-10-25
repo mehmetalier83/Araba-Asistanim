@@ -38,4 +38,5 @@ struct MainTabView: View {
 #Preview {
     MainTabView()
         .environmentObject(AppState())
+        .environmentObject(GarageStore.preview)
 }

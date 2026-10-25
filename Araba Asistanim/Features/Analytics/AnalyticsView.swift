@@ -1,25 +1,20 @@
 import SwiftUI
 
 struct AnalyticsView: View {
+    @EnvironmentObject private var store: GarageStore
     @State private var timeRange: AnalyticsTimeRange = .sixMonths
 
-    /// Only the seeded demo account has sample history to chart — every
-    /// other account starts with nothing recorded yet, so the charts
-    /// themselves would just be empty axes with no story to tell.
-    private let hasData = AppSession.isDemoAccount
-
-    private let monthlyExpenses = AppSession.isDemoAccount ? PreviewData.monthlyExpenses : []
-    private let monthlyFuelConsumption = AppSession.isDemoAccount ? PreviewData.monthlyFuelConsumption : []
-    private let expenseBreakdown = AppSession.isDemoAccount ? PreviewData.expenseBreakdown : []
-    private let summary = AppSession.isDemoAccount ? PreviewData.analyticsSummary : []
+    private var insights: GarageInsights? {
+        store.selectedVehicle.map { GarageInsights(store: store, vehicle: $0) }
+    }
 
     private let summaryColumns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
         NavigationStack {
             Group {
-                if hasData {
-                    content
+                if let insights, insights.hasAnyData {
+                    content(insights)
                 } else {
                     EmptyStateView(
                         systemImage: "chart.pie.fill",
@@ -31,11 +26,39 @@ struct AnalyticsView: View {
             }
             .background(AppTheme.groupedBackground)
             .navigationTitle("Analiz")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    VehicleSwitcherMenu()
+                }
+            }
         }
     }
 
-    private var content: some View {
-        ScrollView {
+    private func content(_ insights: GarageInsights) -> some View {
+        let months = timeRange.monthCount(history: insights.monthsOfHistory)
+        let start = insights.monthStarts(count: months).first
+        let monthlyExpenses = insights.monthlySpending(months: months)
+        let rangeTotal = monthlyExpenses.reduce(0) { $0 + $1.value }
+        let summary = [
+            Statistic(
+                title: months == 1 ? "Bu Ay" : "Aylık Ort.",
+                value: (rangeTotal / Double(months)).rounded().formattedCurrencyTL(),
+                systemImage: "banknote.fill"
+            ),
+            Statistic(
+                title: "Ort. Yakıt Tüketimi",
+                value: insights.averageConsumption(since: start)?.formattedFuelConsumption() ?? "—",
+                systemImage: "fuelpump.fill"
+            ),
+            Statistic(
+                title: "Kilometre Başı Maliyet",
+                value: insights.costPerKm(since: start)?.formattedCostPerKm() ?? "—",
+                systemImage: "road.lanes"
+            )
+        ]
+        let consumption = insights.monthlyConsumption(months: months)
+
+        return ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.xl) {
                 timeRangePicker
 
@@ -46,15 +69,22 @@ struct AnalyticsView: View {
                 }
 
                 chartSection(title: "Aylık Giderler", subtitle: "Ne kadar harcıyorum?") {
-                    MonthlyExpensesChartView(data: timeRange.filter(monthlyExpenses))
+                    MonthlyExpensesChartView(data: monthlyExpenses)
                 }
 
                 chartSection(title: "Yakıt Tüketimi", subtitle: "Tüketim nasıl değişiyor?") {
-                    FuelConsumptionChartView(data: timeRange.filter(monthlyFuelConsumption))
+                    if consumption.isEmpty {
+                        Text("Tüketim hesaplamak için bu aralıkta en az iki 'depo full' yakıt kaydı gerekiyor.")
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        FuelConsumptionChartView(data: consumption)
+                    }
                 }
 
                 chartSection(title: "Kategoriye Göre Giderler", subtitle: "Param nereye gidiyor?") {
-                    SpendingByCategoryChartView(data: expenseBreakdown)
+                    SpendingByCategoryChartView(data: insights.breakdown(since: start))
                 }
             }
             .padding(AppSpacing.md)
@@ -94,9 +124,11 @@ struct AnalyticsView: View {
 
 #Preview {
     AnalyticsView()
+        .environmentObject(GarageStore.preview)
 }
 
 #Preview("Dark") {
     AnalyticsView()
+        .environmentObject(GarageStore.preview)
         .preferredColorScheme(.dark)
 }

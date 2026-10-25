@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AIAssistantView: View {
     @StateObject private var viewModel = AIAssistantViewModel()
+    @EnvironmentObject private var store: GarageStore
     @State private var draftText = ""
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -48,17 +49,29 @@ struct AIAssistantView: View {
 
                 Divider()
 
-                ChatInputPlaceholder(text: $draftText)
-                    .padding(AppSpacing.md)
+                ChatInputPlaceholder(text: $draftText, isSendDisabled: viewModel.isAssistantTyping) {
+                    viewModel.ask(draftText, insights: insights)
+                    draftText = ""
+                }
+                .padding(AppSpacing.md)
             }
             .background(AppTheme.background)
             .navigationTitle("AI Araç Asistanı")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    VehicleSwitcherMenu()
+                }
+            }
         }
     }
 
+    private var insights: GarageInsights? {
+        store.selectedVehicle.map { GarageInsights(store: store, vehicle: $0) }
+    }
+
     private var header: some View {
-        Text("Aracın hakkında soru sor.")
+        Text(store.selectedVehicle.map { "\($0.displayName) hakkında soru sor." } ?? "Aracın hakkında soru sor.")
             .font(AppTypography.subheadline)
             .foregroundStyle(AppTheme.textSecondary)
     }
@@ -71,7 +84,7 @@ struct AIAssistantView: View {
 
             ForEach(viewModel.suggestedQuestions, id: \.self) { question in
                 SuggestedQuestionButton(question: question) {
-                    viewModel.askSuggestedQuestion(question)
+                    viewModel.ask(question, insights: insights)
                 }
             }
         }
@@ -88,9 +101,11 @@ struct AIAssistantView: View {
 
 #Preview {
     AIAssistantView()
+        .environmentObject(GarageStore.preview)
 }
 
 #Preview("Dark") {
     AIAssistantView()
+        .environmentObject(GarageStore.preview)
         .preferredColorScheme(.dark)
 }

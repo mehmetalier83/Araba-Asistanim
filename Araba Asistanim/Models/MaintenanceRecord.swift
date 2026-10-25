@@ -1,7 +1,9 @@
 import SwiftUI
 
-/// A single maintenance event for a vehicle. All instances in this phase are mock/preview data.
-struct MaintenanceRecord: Identifiable, Hashable {
+/// A single maintenance event for a vehicle. Stored records are always
+/// `.completed`; upcoming/overdue items are derived reminders
+/// (see `MaintenanceSchedule`).
+struct MaintenanceRecord: Identifiable, Hashable, Codable {
     let id: UUID
     var vehicleID: UUID
     var title: String
@@ -45,14 +47,16 @@ struct MaintenanceRecord: Identifiable, Hashable {
     }
 }
 
-enum MaintenanceStatus: Hashable {
+enum MaintenanceStatus: String, Hashable, Codable {
     case completed
+    case upcoming
     case dueSoon
     case overdue
 
     var label: String {
         switch self {
         case .completed: return "Tamamlandı"
+        case .upcoming: return "Planlı"
         case .dueSoon: return "Yaklaşıyor"
         case .overdue: return "Gecikti"
         }
@@ -61,13 +65,14 @@ enum MaintenanceStatus: Hashable {
     var tagTone: TagView.Tone {
         switch self {
         case .completed: return .success
+        case .upcoming: return .accent
         case .dueSoon: return .warning
         case .overdue: return .danger
         }
     }
 }
 
-enum MaintenanceCategory: String, CaseIterable, Hashable {
+enum MaintenanceCategory: String, CaseIterable, Hashable, Codable {
     case oilChange
     case brakeInspection
     case batteryReplacement

@@ -99,7 +99,7 @@ final class AddVehicleViewModel: ObservableObject {
         yearError = (yearValue.map { (1980...currentYear + 1).contains($0) } ?? false)
             ? nil : "Geçerli bir yıl gir."
 
-        let mileageValue = Int(mileage)
+        let mileageValue = Int(mileage.filter(\.isNumber))
         mileageError = (mileageValue.map { $0 >= 0 } ?? false)
             ? nil : "Geçerli bir kilometre gir."
 

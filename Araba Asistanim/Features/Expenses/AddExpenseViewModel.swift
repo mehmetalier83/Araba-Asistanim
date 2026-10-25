@@ -44,7 +44,7 @@ final class AddExpenseViewModel: ObservableObject {
         }
     }
 
-    var amountValue: Double { Double(amountText) ?? 0 }
+    var amountValue: Double { amountText.decimalValue ?? 0 }
 
     func clearCategoryError() { categoryError = nil }
     func clearAmountError() { amountError = nil }
@@ -90,7 +90,7 @@ final class AddExpenseViewModel: ObservableObject {
         var mileage: Int?
         let trimmedMileage = mileageText.trimmingCharacters(in: .whitespaces)
         if !trimmedMileage.isEmpty {
-            if let value = Int(trimmedMileage), value >= 0 {
+            if let value = Int(trimmedMileage.filter(\.isNumber)), value >= 0 {
                 mileage = value
             } else {
                 mileageError = "Geçerli bir kilometre gir."

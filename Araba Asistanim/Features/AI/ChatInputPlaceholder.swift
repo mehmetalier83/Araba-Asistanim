@@ -1,10 +1,15 @@
 import SwiftUI
 
-/// A visually present chat input bar. Text entry is not wired to real
-/// messaging yet — this phase only supports tapping suggested questions.
+/// The chat input bar: a text field plus a send button that's enabled once
+/// there's something to send. (Name kept for history; it's fully wired now.)
 struct ChatInputPlaceholder: View {
     @Binding var text: String
-    var isSendDisabled: Bool = true
+    var isSendDisabled: Bool = false
+    var onSend: () -> Void = {}
+
+    private var canSend: Bool {
+        !isSendDisabled && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     var body: some View {
         HStack(spacing: AppSpacing.sm) {
@@ -14,13 +19,17 @@ struct ChatInputPlaceholder: View {
                 .padding(.vertical, AppSpacing.xs)
                 .background(AppTheme.secondaryBackground)
                 .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.pill, style: .continuous))
+                .submitLabel(.send)
+                .onSubmit { if canSend { onSend() } }
                 .accessibilityLabel("Mesaj girişi")
 
-            Image(systemName: "arrow.up.circle.fill")
-                .font(.system(size: AppSizes.iconLarge))
-                .foregroundStyle(isSendDisabled ? AppTheme.textSecondary : AppTheme.primary)
-                .accessibilityLabel("Gönder")
-                .accessibilityHidden(true)
+            Button(action: onSend) {
+                Image(systemName: "arrow.up.circle.fill")
+                    .font(.system(size: AppSizes.iconLarge))
+                    .foregroundStyle(canSend ? AppTheme.primary : AppTheme.textSecondary)
+            }
+            .disabled(!canSend)
+            .accessibilityLabel("Gönder")
         }
     }
 }

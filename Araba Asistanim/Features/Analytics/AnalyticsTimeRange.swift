@@ -1,8 +1,7 @@
 import Foundation
 
-/// Time filter for Analytics charts. Mock data only spans 6 months, so "1Y" and
-/// "All" both show the full range for now — the filter is still fully wired up
-/// so it behaves correctly once real, longer-running data exists.
+/// Time filter for Analytics charts: how many months (ending with the
+/// current one) each range covers.
 enum AnalyticsTimeRange: String, CaseIterable, Identifiable {
     case oneMonth = "1A"
     case sixMonths = "6A"
@@ -11,11 +10,13 @@ enum AnalyticsTimeRange: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    func filter(_ values: [MonthlyValue]) -> [MonthlyValue] {
+    /// `history` is how many months of records exist; "Tümü" spans all of them.
+    func monthCount(history: Int) -> Int {
         switch self {
-        case .oneMonth: return Array(values.suffix(1))
-        case .sixMonths: return Array(values.suffix(6))
-        case .oneYear, .all: return values
+        case .oneMonth: return 1
+        case .sixMonths: return 6
+        case .oneYear: return 12
+        case .all: return max(history, 1)
         }
     }
 }

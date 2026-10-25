@@ -8,12 +8,16 @@ struct TrendBadge: View {
     let percent: Double
 
     private var isImprovement: Bool { percent <= 0 }
+    /// Under 1% reads as "no change": no arrow, rather than a misleading "↑0%".
+    private var isFlat: Bool { abs(percent) < 1 }
 
     var body: some View {
         HStack(spacing: 2) {
-            Image(systemName: isImprovement ? "arrow.down" : "arrow.up")
-                .font(.system(size: 10, weight: .bold))
-            Text("\(abs(Int(percent)))%")
+            if !isFlat {
+                Image(systemName: isImprovement ? "arrow.down" : "arrow.up")
+                    .font(.system(size: 10, weight: .bold))
+            }
+            Text(isFlat ? "≈ 0%" : "\(abs(Int(percent)))%")
                 .font(AppTypography.captionEmphasized)
         }
         .foregroundStyle(isImprovement ? AppTheme.success : AppTheme.warning)
@@ -23,7 +27,9 @@ struct TrendBadge: View {
         .clipShape(Capsule())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
-            isImprovement
+            isFlat
+                ? "Geçen aya göre değişmedi"
+                : isImprovement
                 ? "Geçen aya göre yüzde \(abs(Int(percent))) düştü"
                 : "Geçen aya göre yüzde \(abs(Int(percent))) arttı"
         )

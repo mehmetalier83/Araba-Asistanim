@@ -15,9 +15,8 @@ final class AuthViewModel: ObservableObject {
         // install (no persisted session) should see the Welcome/Login flow.
         // We deliberately don't gate this on access-token expiry: with a real
         // backend an expired access token is silently renewed from the
-        // refresh token, never bouncing the user back to login. MockAuthService
-        // doesn't implement that refresh call yet, so for now a persisted
-        // session is treated as valid until the user explicitly logs out.
+        // refresh token, never bouncing the user back to login (Firebase Auth
+        // does this itself; MockAuthService has no expiry at all).
         if let session = repository.restoreSession() {
             AppSession.update(for: session.user)
             state = .authenticated(session.user)
@@ -44,8 +43,7 @@ final class AuthViewModel: ObservableObject {
             let user = try await repository.signIn(email: email, password: password)
             authenticate(as: user)
         } catch {
-            state = .error(Self.message(for: error))
-            HapticFeedback.error()
+            fail(with: error)
         }
     }
 
@@ -55,8 +53,7 @@ final class AuthViewModel: ObservableObject {
             let user = try await repository.signUp(email: email, password: password)
             authenticate(as: user)
         } catch {
-            state = .error(Self.message(for: error))
-            HapticFeedback.error()
+            fail(with: error)
         }
     }
 
@@ -66,8 +63,7 @@ final class AuthViewModel: ObservableObject {
             let user = try await repository.signInWithGoogle()
             authenticate(as: user)
         } catch {
-            state = .error(Self.message(for: error))
-            HapticFeedback.error()
+            fail(with: error)
         }
     }
 
@@ -77,9 +73,19 @@ final class AuthViewModel: ObservableObject {
             let user = try await repository.signInWithApple()
             authenticate(as: user)
         } catch {
-            state = .error(Self.message(for: error))
-            HapticFeedback.error()
+            fail(with: error)
         }
+    }
+
+    /// Publishes a failed attempt. A user-cancelled system sheet (e.g. Sign in
+    /// with Apple) quietly returns to the logged-out state instead.
+    private func fail(with error: Error) {
+        if (error as? AuthError) == .cancelled {
+            state = .unauthenticated
+            return
+        }
+        state = .error(Self.message(for: error))
+        HapticFeedback.error()
     }
 
     /// Sets the demo-vs-empty data flag before publishing `.authenticated`,
@@ -97,6 +103,12 @@ final class AuthViewModel: ObservableObject {
     /// UI rather than observing `state`.
     func requestPasswordReset(email: String) async throws {
         try await repository.requestPasswordReset(email: email)
+    }
+
+    /// Like `requestPasswordReset`, the caller owns the loading/error UI.
+    func deleteAccount() async throws {
+        try await repository.deleteAccount()
+        state = .unauthenticated
     }
 
     func signOut() {

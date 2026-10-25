@@ -1,7 +1,7 @@
 import Charts
 import SwiftUI
 
-/// A line chart of monthly fuel consumption (L/100km). Mock data only.
+/// A line chart of monthly fuel consumption (L/100km).
 struct FuelConsumptionChartView: View {
     let data: [MonthlyValue]
 
