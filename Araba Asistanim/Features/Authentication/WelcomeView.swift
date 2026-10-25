@@ -25,12 +25,7 @@ struct WelcomeView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.md) {
                     Image("AppLogo")
                         .resizable()
-                        .frame(width: 64, height: 64)
-                        .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 15, style: .continuous)
-                                .strokeBorder(.white.opacity(0.12), lineWidth: 1)
-                        )
+                        .frame(width: 84, height: 84)
                         .accessibilityHidden(true)
 
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {

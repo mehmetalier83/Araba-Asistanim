@@ -1,9 +1,11 @@
-// Renders the CarLog AI app icon (a speedometer gauge with an AI spark) as
-// opaque 1024×1024 PNGs for the AppIcon set, plus the in-app logo image.
+// Renders the app icon ("Konuşan Araç": a friendly car face with an AI spark)
+// as opaque 1024×1024 PNGs for the AppIcon set, plus the transparent in-app
+// mark (car face and spark only) used on the Welcome screen.
 //
 //   swift Config/AppIcon/render_icon.swift
 //
 // Run from the repository root; it overwrites the PNGs in Assets.xcassets.
+// Coordinates below are on a 1024×1024 canvas with y pointing down.
 
 import CoreGraphics
 import Foundation
@@ -11,6 +13,8 @@ import ImageIO
 import UniformTypeIdentifiers
 
 let assets = "Araba Asistanim/Assets.xcassets"
+let canvas: CGFloat = 1024
+let space = CGColorSpace(name: CGColorSpace.sRGB)!
 
 func color(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
     CGColor(
@@ -21,121 +25,148 @@ func color(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
     )
 }
 
-struct Palette {
-    var backgroundTop: CGColor
-    var backgroundBottom: CGColor
-    var track: CGColor
-    var arcStart: CGColor
-    var arcEnd: CGColor
-    var needle: CGColor
-    var spark: CGColor
+struct Variant {
+    /// Background gradient, top-left → bottom-right. `nil` leaves it transparent.
+    var background: (CGColor, CGColor)?
+    var highlight: Bool
+    /// Fill for the eyes, smile and windshield.
+    var feature: (CGColor, CGColor)
+    var shape: CGColor
 }
 
-let standard = Palette(
-    backgroundTop: color(0x222C40), backgroundBottom: color(0x070A12),
-    track: color(0xFFFFFF, 0.10),
-    arcStart: color(0x2F5FE0), arcEnd: color(0x8FB0FF),
-    needle: color(0xFFFFFF), spark: color(0x8FB0FF)
-)
+let brand = (color(0x5B6CFF), color(0xA65CFF))
 
-let dark = Palette(
-    backgroundTop: color(0x111725), backgroundBottom: color(0x000000),
-    track: color(0xFFFFFF, 0.08),
-    arcStart: color(0x4A78F0), arcEnd: color(0xA3BEFF),
-    needle: color(0xF2F5FF), spark: color(0xA3BEFF)
-)
-
+let standard = Variant(background: brand, highlight: true, feature: brand, shape: color(0xFFFFFF))
+let dark = Variant(background: (color(0x1D1A46), color(0x100E28)), highlight: false, feature: brand, shape: color(0xFFFFFF))
 /// iOS colors tinted icons from luminance, so this one is grayscale on black.
-let tinted = Palette(
-    backgroundTop: color(0x000000), backgroundBottom: color(0x000000),
-    track: color(0xFFFFFF, 0.18),
-    arcStart: color(0x8C8C8C), arcEnd: color(0xFFFFFF),
-    needle: color(0xFFFFFF), spark: color(0xFFFFFF)
-)
+let tinted = Variant(background: (color(0x000000), color(0x000000)), highlight: false, feature: (color(0x000000), color(0x000000)), shape: color(0xFFFFFF))
+let mark = Variant(background: nil, highlight: false, feature: brand, shape: color(0xFFFFFF))
 
-func draw(_ p: Palette, in ctx: CGContext, size s: CGFloat) {
-    let space = CGColorSpace(name: CGColorSpace.sRGB)!
+// MARK: - Shapes
 
-    // Background (CoreGraphics' origin is bottom-left).
-    let bg = CGGradient(colorsSpace: space, colors: [p.backgroundTop, p.backgroundBottom] as CFArray, locations: [0, 1])!
-    ctx.drawLinearGradient(bg, start: CGPoint(x: 0, y: s), end: CGPoint(x: 0, y: 0), options: [])
+func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x, y: y) }
 
-    let center = CGPoint(x: s * 0.5, y: s * 0.39)
-    let radius = s * 0.30
-    let lineWidth = s * 0.075
-    // The gauge sweeps 240°, open at the bottom.
-    let startAngle = CGFloat.pi * 7 / 6   // lower left
-    let endAngle = -CGFloat.pi / 6        // lower right
-    let filledAngle = CGFloat.pi / 4.2    // where the needle points (upper right)
+let body: CGPath = {
+    let path = CGMutablePath()
+    path.move(to: p(250, 560))
+    path.addLine(to: p(300, 380))
+    path.addQuadCurve(to: p(380, 320), control: p(318, 320))
+    path.addLine(to: p(644, 320))
+    path.addQuadCurve(to: p(724, 380), control: p(706, 320))
+    path.addLine(to: p(774, 560))
+    path.addQuadCurve(to: p(820, 630), control: p(820, 580))
+    path.addLine(to: p(820, 740))
+    path.addQuadCurve(to: p(790, 770), control: p(820, 770))
+    path.addLine(to: p(234, 770))
+    path.addQuadCurve(to: p(204, 740), control: p(204, 770))
+    path.addLine(to: p(204, 630))
+    path.addQuadCurve(to: p(250, 560), control: p(204, 580))
+    path.closeSubpath()
+    return path
+}()
 
-    ctx.setLineCap(.round)
-    ctx.setLineWidth(lineWidth)
-
-    // Unfilled track.
-    ctx.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
-    ctx.setStrokeColor(p.track)
-    ctx.strokePath()
-
-    // Filled part of the gauge, blue gradient clipped to the stroked arc.
-    ctx.saveGState()
-    ctx.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: filledAngle, clockwise: true)
-    ctx.replacePathWithStrokedPath()
-    ctx.clip()
-    let arc = CGGradient(colorsSpace: space, colors: [p.arcStart, p.arcEnd] as CFArray, locations: [0, 1])!
-    ctx.drawLinearGradient(
-        arc,
-        start: CGPoint(x: center.x - radius, y: center.y - radius),
-        end: CGPoint(x: center.x + radius, y: center.y + radius),
-        options: [.drawsBeforeStartLocation, .drawsAfterEndLocation]
-    )
-    ctx.restoreGState()
-
-    // Needle: a tapered wedge from the hub toward the end of the filled arc.
-    let needleLength = radius * 0.78
-    let tip = CGPoint(x: center.x + cos(filledAngle) * needleLength, y: center.y + sin(filledAngle) * needleLength)
-    let baseHalf = s * 0.028
-    let perp = filledAngle + .pi / 2
-    ctx.beginPath()
-    ctx.move(to: tip)
-    ctx.addLine(to: CGPoint(x: center.x + cos(perp) * baseHalf, y: center.y + sin(perp) * baseHalf))
-    ctx.addLine(to: CGPoint(x: center.x - cos(perp) * baseHalf, y: center.y - sin(perp) * baseHalf))
-    ctx.closePath()
-    ctx.setFillColor(p.needle)
-    ctx.fillPath()
-
-    // Hub.
-    let hub = s * 0.052
-    ctx.fillEllipse(in: CGRect(x: center.x - hub, y: center.y - hub, width: hub * 2, height: hub * 2))
-    let hubInner = hub * 0.42
-    ctx.setFillColor(p.backgroundBottom)
-    ctx.fillEllipse(in: CGRect(x: center.x - hubInner, y: center.y - hubInner, width: hubInner * 2, height: hubInner * 2))
-
-    // AI spark: a four-point star above the gauge, with a smaller companion.
-    func spark(at c: CGPoint, size r: CGFloat) {
-        let waist = r * 0.22
-        ctx.beginPath()
-        ctx.move(to: CGPoint(x: c.x, y: c.y + r))
-        ctx.addQuadCurve(to: CGPoint(x: c.x + r, y: c.y), control: CGPoint(x: c.x + waist, y: c.y + waist))
-        ctx.addQuadCurve(to: CGPoint(x: c.x, y: c.y - r), control: CGPoint(x: c.x + waist, y: c.y - waist))
-        ctx.addQuadCurve(to: CGPoint(x: c.x - r, y: c.y), control: CGPoint(x: c.x - waist, y: c.y - waist))
-        ctx.addQuadCurve(to: CGPoint(x: c.x, y: c.y + r), control: CGPoint(x: c.x - waist, y: c.y + waist))
-        ctx.closePath()
-        ctx.setFillColor(p.spark)
-        ctx.fillPath()
+let tyres: CGPath = {
+    let path = CGMutablePath()
+    for x: CGFloat in [250, 664] {
+        path.addRoundedRect(in: CGRect(x: x, y: 770, width: 110, height: 70), cornerWidth: 26, cornerHeight: 26)
     }
-    spark(at: CGPoint(x: s * 0.75, y: s * 0.73), size: s * 0.085)
-    spark(at: CGPoint(x: s * 0.87, y: s * 0.62), size: s * 0.04)
+    return path
+}()
+
+let windshield: CGPath = {
+    let path = CGMutablePath()
+    path.move(to: p(330, 540))
+    path.addLine(to: p(362, 410))
+    path.addQuadCurve(to: p(400, 380), control: p(370, 380))
+    path.addLine(to: p(624, 380))
+    path.addQuadCurve(to: p(662, 410), control: p(654, 380))
+    path.addLine(to: p(694, 540))
+    path.closeSubpath()
+    return path
+}()
+
+func circles(_ centers: [CGPoint], radius r: CGFloat) -> CGPath {
+    let path = CGMutablePath()
+    for c in centers {
+        path.addEllipse(in: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2))
+    }
+    return path
 }
 
-func render(_ palette: Palette, size: Int, to path: String) {
+let eyes = circles([p(330, 640), p(694, 640)], radius: 54)
+let eyeHighlights = circles([p(346, 624), p(710, 624)], radius: 16)
+
+let smile: CGPath = {
+    let path = CGMutablePath()
+    path.move(to: p(440, 680))
+    path.addQuadCurve(to: p(584, 680), control: p(512, 735))
+    return path.copy(strokingWithWidth: 30, lineCap: .round, lineJoin: .round, miterLimit: 10)
+}()
+
+let sparkle: CGPath = {
+    let path = CGMutablePath()
+    path.move(to: p(512, 150))
+    path.addCurve(to: p(588, 226), control1: p(521, 200), control2: p(538, 217))
+    path.addCurve(to: p(512, 302), control1: p(538, 235), control2: p(521, 252))
+    path.addCurve(to: p(436, 226), control1: p(503, 252), control2: p(486, 235))
+    path.addCurve(to: p(512, 150), control1: p(486, 217), control2: p(503, 200))
+    path.closeSubpath()
+    return path
+}()
+
+// MARK: - Drawing
+
+func fillGradient(_ colors: (CGColor, CGColor), clippedTo path: CGPath?, alpha: CGFloat = 1, in ctx: CGContext) {
+    ctx.saveGState()
+    if let path {
+        ctx.addPath(path)
+        ctx.clip()
+    }
+    ctx.setAlpha(alpha)
+    let gradient = CGGradient(colorsSpace: space, colors: [colors.0, colors.1] as CFArray, locations: [0, 1])!
+    ctx.drawLinearGradient(gradient, start: .zero, end: p(canvas, canvas), options: [])
+    ctx.restoreGState()
+}
+
+func fill(_ path: CGPath, _ color: CGColor, in ctx: CGContext) {
+    ctx.addPath(path)
+    ctx.setFillColor(color)
+    ctx.fillPath()
+}
+
+func draw(_ v: Variant, in ctx: CGContext) {
+    if let background = v.background {
+        fillGradient(background, clippedTo: nil, in: ctx)
+    }
+    if v.highlight {
+        let glow = CGGradient(colorsSpace: space, colors: [color(0xFFFFFF, 0.3), color(0xFFFFFF, 0)] as CFArray, locations: [0, 1])!
+        ctx.drawRadialGradient(glow, startCenter: p(256, 205), startRadius: 0, endCenter: p(256, 205), endRadius: 920, options: [])
+    }
+
+    fill(body, v.shape, in: ctx)
+    fill(tyres, v.shape, in: ctx)
+    fillGradient(v.feature, clippedTo: windshield, alpha: 0.18, in: ctx)
+    fillGradient(v.feature, clippedTo: eyes, in: ctx)
+    fill(eyeHighlights, v.shape, in: ctx)
+    fillGradient(v.feature, clippedTo: smile, in: ctx)
+    fill(sparkle, v.shape, in: ctx)
+}
+
+/// Draws `variant` on the 1024 canvas (y down) and writes the part inside
+/// `crop` scaled to `size`×`size` pixels.
+func render(_ variant: Variant, size: Int, crop: CGRect = CGRect(x: 0, y: 0, width: canvas, height: canvas), to path: String) {
+    let opaque = variant.background != nil
     let ctx = CGContext(
-        data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,
-        space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0, space: space,
+        bitmapInfo: (opaque ? CGImageAlphaInfo.noneSkipLast : CGImageAlphaInfo.premultipliedLast).rawValue
     )!
-    draw(palette, in: ctx, size: CGFloat(size))
-    let url = URL(fileURLWithPath: path)
-    let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil)!
+    let scale = CGFloat(size) / crop.width
+    ctx.translateBy(x: 0, y: CGFloat(size))
+    ctx.scaleBy(x: scale, y: -scale)
+    ctx.translateBy(x: -crop.minX, y: -crop.minY)
+    draw(variant, in: ctx)
+
+    let dest = CGImageDestinationCreateWithURL(URL(fileURLWithPath: path) as CFURL, UTType.png.identifier as CFString, 1, nil)!
     CGImageDestinationAddImage(dest, ctx.makeImage()!, nil)
     guard CGImageDestinationFinalize(dest) else { fatalError("Could not write \(path)") }
     print("Wrote \(path)")
@@ -144,4 +175,5 @@ func render(_ palette: Palette, size: Int, to path: String) {
 render(standard, size: 1024, to: "\(assets)/AppIcon.appiconset/AppIcon.png")
 render(dark, size: 1024, to: "\(assets)/AppIcon.appiconset/AppIcon-Dark.png")
 render(tinted, size: 1024, to: "\(assets)/AppIcon.appiconset/AppIcon-Tinted.png")
-render(standard, size: 384, to: "\(assets)/AppLogo.imageset/AppLogo.png")
+// The mark spans x 204…820, y 150…840; a centered square around it.
+render(mark, size: 384, crop: CGRect(x: 167, y: 150, width: 690, height: 690), to: "\(assets)/AppLogo.imageset/AppLogo.png")
