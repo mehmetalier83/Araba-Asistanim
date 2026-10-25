@@ -6,6 +6,7 @@ import Foundation
 enum PasswordRequirement: CaseIterable, Identifiable {
     case minLength
     case uppercase
+    case lowercase
     case number
 
     var id: Self { self }
@@ -14,6 +15,7 @@ enum PasswordRequirement: CaseIterable, Identifiable {
         switch self {
         case .minLength: return "En az 8 karakter"
         case .uppercase: return "Bir büyük harf"
+        case .lowercase: return "Bir küçük harf"
         case .number: return "Bir rakam"
         }
     }
@@ -22,6 +24,7 @@ enum PasswordRequirement: CaseIterable, Identifiable {
         switch self {
         case .minLength: return password.count >= 8
         case .uppercase: return password.contains { $0.isUppercase }
+        case .lowercase: return password.contains { $0.isLowercase }
         case .number: return password.contains { $0.isNumber }
         }
     }

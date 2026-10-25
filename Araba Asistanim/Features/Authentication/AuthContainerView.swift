@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Owns the unauthenticated flow's navigation stack: Welcome is the root, with
-/// the first-run onboarding (once) and Login/Register/ForgotPassword as push
-/// destinations. Kept separate from
+/// the first-run onboarding (once) and sign in / sign up (`AuthView`, which
+/// presents forgot password as a sheet) as push destinations. Kept separate from
 /// AppRootView so the auth flow's own back-navigation is self-contained.
 struct AuthContainerView: View {
     @State private var path = NavigationPath()
@@ -24,14 +24,9 @@ struct AuthContainerView: View {
                         path = next
                     }
                 case .login:
-                    LoginView(
-                        onForgotPassword: { path.append(AuthRoute.forgotPassword) },
-                        onCreateAccount: { path.append(AuthRoute.register) }
-                    )
+                    AuthView(mode: .signIn)
                 case .register:
-                    RegisterView()
-                case .forgotPassword:
-                    ForgotPasswordView()
+                    AuthView(mode: .signUp)
                 }
             }
         }

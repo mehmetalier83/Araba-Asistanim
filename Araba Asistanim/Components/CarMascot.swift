@@ -9,6 +9,9 @@ struct CarMascot: View {
     var animates = true
     /// Extra glow behind the mark; off where it sits on a light surface.
     var glows = true
+    /// Eyes shut in a content curve — the mascot "looks away" while a
+    /// password is being typed.
+    var eyesClosed = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -58,6 +61,13 @@ struct CarMascot: View {
         let phase = t.truncatingRemainder(dividingBy: 4.5)
         let blink = phase < 0.18 ? max(0.08, abs(phase / 0.09 - 1)) : 1
         for center in [CGPoint(x: 330, y: 640), CGPoint(x: 694, y: 640)] {
+            if eyesClosed {
+                var lid = Path()
+                lid.move(to: CGPoint(x: center.x - 44, y: center.y - 6))
+                lid.addQuadCurve(to: CGPoint(x: center.x + 44, y: center.y - 6), control: CGPoint(x: center.x, y: center.y + 34))
+                ctx.stroke(lid, with: gradient, style: StrokeStyle(lineWidth: 24, lineCap: .round))
+                continue
+            }
             let eye = CGRect(x: center.x - 54, y: center.y - 54 * blink, width: 108, height: 108 * blink)
             ctx.fill(Path(ellipseIn: eye), with: gradient)
             if blink > 0.6 {
