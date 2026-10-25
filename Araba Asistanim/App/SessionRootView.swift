@@ -30,10 +30,12 @@ struct SessionRootView: View {
             "Bir sorun oluştu",
             isPresented: Binding(
                 get: { store.syncErrorMessage != nil },
-                set: { if !$0 { store.syncErrorMessage = nil } }
+                // Cleared by the button below instead of here: this setter
+                // runs during the view update, where publishing is not allowed.
+                set: { _ in }
             )
         ) {
-            Button("Tamam", role: .cancel) {}
+            Button("Tamam", role: .cancel) { store.syncErrorMessage = nil }
         } message: {
             Text(store.syncErrorMessage ?? "")
         }

@@ -11,7 +11,7 @@ final class GarageStore: ObservableObject {
     @Published private(set) var maintenanceRecords: [MaintenanceRecord] = []
     @Published private(set) var expenses: [ExpenseRecord] = []
     @Published private(set) var isLoaded = false
-    /// Set when a load or save fails; shown once by MainTabView, then cleared.
+    /// Set when a load or save fails; shown once by SessionRootView, then cleared.
     @Published var syncErrorMessage: String?
 
     @Published var selectedVehicleID: UUID? {
