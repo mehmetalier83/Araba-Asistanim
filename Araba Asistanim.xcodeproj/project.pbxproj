@@ -262,7 +262,7 @@
 				DEVELOPMENT_TEAM = HJHD973MWB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.not-configured";
+				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.806844368088-ecfj29r1nrod3vncvj3e33pg1vun6ebf";
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Fiş ve fatura fotoğrafı çekebilmek için kameraya erişim gerekiyor.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -306,7 +306,7 @@
 				DEVELOPMENT_TEAM = HJHD973MWB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.not-configured";
+				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.806844368088-ecfj29r1nrod3vncvj3e33pg1vun6ebf";
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Fiş ve fatura fotoğrafı çekebilmek için kameraya erişim gerekiyor.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
