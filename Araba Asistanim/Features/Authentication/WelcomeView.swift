@@ -34,7 +34,7 @@ struct WelcomeView: View {
                         .accessibilityHidden(true)
 
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                        Text("CARLOG AI")
+                        Text(AppBrand.uppercasedName)
                             .font(.system(.footnote, weight: .bold))
                             .tracking(2)
                             .foregroundStyle(AppColors.accentDarkOnDark)

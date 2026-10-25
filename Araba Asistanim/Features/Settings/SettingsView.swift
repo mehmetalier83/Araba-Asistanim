@@ -26,7 +26,7 @@ struct SettingsView: View {
     ]
 
     private let aboutRows = [
-        Row(title: "CarLog AI Hakkında", systemImage: "info.circle.fill", message: "CarLog AI, aracının bakım, yakıt ve giderlerini tek bir yerden takip etmeni sağlar."),
+        Row(title: "\(AppBrand.name) Hakkında", systemImage: "info.circle.fill", message: "\(AppBrand.name), aracının bakım, yakıt ve giderlerini tek bir yerden takip etmeni sağlar."),
         Row(title: "Gizlilik Politikası", systemImage: "hand.raised.fill", message: "Gizlilik politikası metni henüz eklenmedi."),
         Row(title: "Kullanım Koşulları", systemImage: "doc.text.fill", message: "Kullanım koşulları metni henüz eklenmedi.")
     ]

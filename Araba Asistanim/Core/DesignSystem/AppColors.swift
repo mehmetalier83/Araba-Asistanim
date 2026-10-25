@@ -21,7 +21,7 @@ extension Color {
 /// Brand color palette. Neutrals (backgrounds, text, separators) intentionally stay
 /// on Apple's semantic system colors elsewhere in AppTheme — those already ship with
 /// carefully tuned dark-mode variants and respond to Increased Contrast automatically.
-/// This file defines only the colors that make CarLog AI feel like *this* product:
+/// This file defines only the colors that make the app feel like *this* product:
 /// the accent and the semantic status colors, each independently tuned per appearance.
 enum AppColors {
     /// "Circuit Blue" — a confident, engineered blue rather than default iOS system blue.
