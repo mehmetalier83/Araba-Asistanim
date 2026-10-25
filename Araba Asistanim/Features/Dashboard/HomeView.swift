@@ -6,6 +6,7 @@ struct HomeView: View {
     @EnvironmentObject private var store: GarageStore
     @State private var path = NavigationPath()
     @State private var isShowingNotifications = false
+    @State private var plan = OnboardingPreferences.isPlanCardDismissed ? nil : OnboardingPreferences.load()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var vehicle: Vehicle? { store.selectedVehicle }
@@ -17,6 +18,10 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
                     header
+
+                    if let plan {
+                        planCard(plan)
+                    }
 
                     if let vehicle, let insights {
                         VehicleHeroCard(vehicle: vehicle) {
@@ -125,6 +130,53 @@ struct HomeView: View {
             }
         }
         .padding(.top, AppSpacing.xs)
+    }
+
+    // MARK: - Plan
+
+    /// A one-time card echoing what the person chose during onboarding.
+    private func planCard(_ plan: OnboardingPreferences) -> some View {
+        HStack(alignment: .top, spacing: AppSpacing.sm) {
+            Image(systemName: "sparkles")
+                .font(.system(size: AppSizes.iconSmall, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 36, height: 36)
+                .background(LinearGradient.mascot(), in: Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Planın hazır")
+                    .font(AppTypography.headline)
+                    .foregroundStyle(AppTheme.textPrimary)
+
+                if !plan.goals.isEmpty {
+                    Text(plan.goals.map(\.title).joined(separator: " · "))
+                        .font(AppTypography.subheadline)
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
+
+                Text("Ayda ~\(plan.monthlyKm.formattedMileage()) ile yağ değişimi yaklaşık her \(plan.monthsPerOilChange) ayda bir.")
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+
+            Spacer(minLength: 0)
+
+            Button {
+                OnboardingPreferences.isPlanCardDismissed = true
+                withAnimation(reduceMotion ? nil : AppAnimation.standard) { self.plan = nil }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: AppSizes.iconXSmall, weight: .semibold))
+                    .foregroundStyle(AppTheme.textTertiary)
+                    .frame(width: AppSizes.minTouchTarget, height: AppSizes.minTouchTarget)
+            }
+            .accessibilityLabel("Kapat")
+        }
+        .padding(.leading, AppSpacing.md)
+        .padding(.vertical, AppSpacing.sm)
+        .background(AppTheme.primarySubtle)
+        .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous))
     }
 
     // MARK: - Empty garage

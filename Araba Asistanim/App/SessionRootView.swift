@@ -16,6 +16,17 @@ struct SessionRootView: View {
         ))
     }
 
+    private var upcomingReminders: [(record: MaintenanceRecord, vehicleName: String)] {
+        store.vehicles.flatMap { vehicle in
+            store.reminders(for: vehicle.id).map { (record: $0, vehicleName: vehicle.displayName) }
+        }
+    }
+
+    /// Changes whenever a reminder's title or date does, so notifications are rescheduled.
+    private var reminderSchedule: [String] {
+        upcomingReminders.map { "\($0.vehicleName)|\($0.record.title)|\($0.record.date.timeIntervalSince1970)" }
+    }
+
     var body: some View {
         Group {
             if store.isLoaded {
@@ -26,6 +37,10 @@ struct SessionRootView: View {
         }
         .environmentObject(store)
         .task { await store.load() }
+        .task(id: reminderSchedule) {
+            guard store.isLoaded else { return }
+            await MaintenanceNotificationScheduler.reschedule(upcomingReminders)
+        }
         .alert(
             "Bir sorun oluştu",
             isPresented: Binding(

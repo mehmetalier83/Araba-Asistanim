@@ -1,92 +1,77 @@
 import SwiftUI
 
-/// The very first screen. Full-bleed dark surface (matching the Home hero
-/// card's treatment) so the brand feels premium and automotive from the first
-/// frame, rather than a generic white SaaS landing page.
+/// The very first screen, and the root of the signed-out flow: the mascot
+/// idling over the dark brand canvas with one headline, one line of support
+/// and two actions. Always dark — it is a brand surface, like the app icon.
 struct WelcomeView: View {
     let onGetStarted: () -> Void
     let onSignIn: () -> Void
 
+    @State private var appeared = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         ZStack {
-            backgroundSurface
-
-            Image(systemName: "car.side.fill")
-                .font(.system(size: 320))
-                .foregroundStyle(.white.opacity(0.05))
-                .frame(width: 320, height: 320)
-                .offset(x: 90, y: -120)
-                .accessibilityHidden(true)
-                .allowsHitTesting(false)
+            BrandGlowBackground()
 
             VStack(spacing: 0) {
-                Spacer()
+                Spacer(minLength: AppSpacing.lg)
 
-                VStack(alignment: .leading, spacing: AppSpacing.md) {
-                    Image("AppLogo")
-                        .resizable()
-                        .frame(width: 84, height: 84)
-                        .accessibilityHidden(true)
+                CarMascot()
+                    .frame(maxWidth: 220, maxHeight: 220)
+                    .scaleEffect(appeared ? 1 : 0.8)
+                    .opacity(appeared ? 1 : 0)
 
-                    VStack(alignment: .leading, spacing: AppSpacing.xxs) {
-                        Text(AppBrand.uppercasedName)
-                            .font(.system(.footnote, weight: .bold))
-                            .tracking(2)
-                            .foregroundStyle(AppColors.accentDarkOnDark)
-
-                        Text("Aracını tanı.\nMasraflarını anla.")
-                            .font(.system(.largeTitle, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
-
-                    Text("Bakım, yakıt, giderler ve araç geçmişini tek bir yerden takip et.")
-                        .font(AppTypography.body)
-                        .foregroundStyle(.white.opacity(0.7))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, AppSpacing.lg)
-
-                Spacer()
+                Spacer(minLength: AppSpacing.lg)
 
                 VStack(spacing: AppSpacing.sm) {
-                    Button(action: onGetStarted) {
-                        Text("Başlayalım")
-                            .font(AppTypography.headline)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: AppSizes.buttonHeight)
-                    }
-                    .buttonStyle(.appPressScale)
-                    .foregroundStyle(Color(hex: 0x141A26))
-                    .background(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
+                    Text(AppBrand.uppercasedName)
+                        .font(.system(.footnote, weight: .bold))
+                        .tracking(2)
+                        .foregroundStyle(Color(hex: 0xB9B3FF))
+
+                    Text("Aracının akıllı\nasistanı")
+                        .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.white)
+
+                    Text("Bakım, yakıt ve giderlerini tek yerden takip et; aklına takılanı asistana sor.")
+                        .font(AppTypography.body)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.white.opacity(0.7))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, AppSpacing.xl)
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 20)
+
+                Spacer(minLength: AppSpacing.xl)
+
+                VStack(spacing: AppSpacing.xs) {
+                    GradientPillButton(title: "Başlayalım", action: onGetStarted)
 
                     Button(action: onSignIn) {
-                        Text("Zaten Hesabım Var")
-                            .font(AppTypography.headline)
+                        Text("Zaten hesabım var")
+                            .font(.system(.headline, design: .rounded, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.85))
                             .frame(maxWidth: .infinity)
                             .frame(height: AppSizes.buttonHeight)
                     }
                     .buttonStyle(.appPressScale)
-                    .foregroundStyle(.white)
                 }
                 .padding(.horizontal, AppSpacing.lg)
-                .padding(.bottom, AppSpacing.md)
+                .padding(.bottom, AppSpacing.sm)
+                .opacity(appeared ? 1 : 0)
             }
         }
-        .background(Color(hex: 0x05070C))
-        .ignoresSafeArea(edges: .top)
+        .environment(\.colorScheme, .dark)
+        .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            withAnimation(reduceMotion ? nil : .spring(response: 0.7, dampingFraction: 0.8)) {
+                appeared = true
+            }
+        }
     }
-
-    private var backgroundSurface: some View {
-        LinearGradient.graphiteSurface(startPoint: .top, endPoint: .bottom)
-            .ignoresSafeArea()
-    }
-}
-
-private extension AppColors {
-    /// A brighter accent tint reserved for use over the always-dark Welcome
-    /// surface, independent of the system light/dark appearance.
-    static let accentDarkOnDark = Color(hex: 0x8FB0FF)
 }
 
 #Preview {

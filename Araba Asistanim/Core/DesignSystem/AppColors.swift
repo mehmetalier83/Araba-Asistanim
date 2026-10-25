@@ -77,6 +77,10 @@ enum AppColors {
         dark: Color(hex: 0x4FC9C4)
     )
 
+    /// The two ends of the app icon's gradient (see `LinearGradient.mascot`).
+    static let mascotIndigo = Color(hex: 0x5B6CFF)
+    static let mascotViolet = Color(hex: 0xA65CFF)
+
     static let categoryPurple = Color(
         light: Color(hex: 0x6B4FCC),
         dark: Color(hex: 0x9E8AFF)
@@ -99,6 +103,13 @@ extension LinearGradient {
             startPoint: startPoint,
             endPoint: endPoint
         )
+    }
+
+    /// The app icon's indigo → violet gradient, used by the mascot and the
+    /// onboarding flow so they match the icon on the home screen.
+    @MainActor
+    static func mascot(startPoint: UnitPoint = .topLeading, endPoint: UnitPoint = .bottomTrailing) -> LinearGradient {
+        LinearGradient(colors: [AppColors.mascotIndigo, AppColors.mascotViolet], startPoint: startPoint, endPoint: endPoint)
     }
 
     /// The dark "graphite" surface used for every automotive hero element:
