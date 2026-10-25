@@ -154,7 +154,7 @@ final class FirebaseAuthService: AuthServiceProtocol {
         case .tooManyRequests:
             return .tooManyRequests
         case .operationNotAllowed:
-            return .providerUnavailable
+            return .providerDisabled
         case .requiresRecentLogin:
             return .requiresRecentLogin
         default:

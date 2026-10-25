@@ -13,6 +13,11 @@ enum AuthError: LocalizedError, Equatable {
     case requiresRecentLogin
     /// The sign-in provider (e.g. Google) isn't set up for this build yet.
     case providerUnavailable
+    /// Sign in with Apple isn't enabled for this build: the app lacks the
+    /// capability (it can't be added on a free "Personal Team").
+    case appleSignInNotConfigured
+    /// The provider is switched off in the Firebase console.
+    case providerDisabled
     /// The user dismissed a system sign-in sheet — not shown as an error.
     case cancelled
     case unknown
@@ -33,6 +38,10 @@ enum AuthError: LocalizedError, Equatable {
             return "Güvenliğin için bu işlemden önce çıkış yapıp tekrar giriş yapman gerekiyor."
         case .providerUnavailable:
             return "Bu giriş yöntemi henüz kullanılamıyor. Lütfen e-posta ile giriş yap."
+        case .appleSignInNotConfigured:
+            return "Apple ile giriş bu sürümde henüz etkin değil. Şimdilik e-posta veya Google ile devam edebilirsin."
+        case .providerDisabled:
+            return "Bu giriş yöntemi şu an kapalı. Lütfen e-posta veya başka bir yöntemle devam et."
         case .cancelled:
             return "Giriş iptal edildi."
         case .unknown:

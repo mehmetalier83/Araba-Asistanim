@@ -64,9 +64,14 @@ extension AppleSignInCoordinator: ASAuthorizationControllerDelegate {
     }
 
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
-        if (error as? ASAuthorizationError)?.code == .canceled {
+        switch (error as? ASAuthorizationError)?.code {
+        case .canceled:
             finish(.failure(AuthError.cancelled))
-        } else {
+        case .unknown:
+            // Code 1000: the app isn't entitled to Sign in with Apple (no
+            // capability / provisioning profile without it).
+            finish(.failure(AuthError.appleSignInNotConfigured))
+        default:
             finish(.failure(AuthError.providerUnavailable))
         }
     }
