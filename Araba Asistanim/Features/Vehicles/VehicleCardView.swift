@@ -3,7 +3,7 @@ import SwiftUI
 /// A compact row representing one vehicle in a list. No chevron of its own —
 /// it's always used inside a List via NavigationLink, which already supplies
 /// the disclosure indicator; adding a second one would double up. For the
-/// single-vehicle hero treatment used on Home, see VehicleHeroCard — a list
+/// single-vehicle hero treatment see the Vehicle Detail header — a list
 /// row and a hero element have different jobs and are styled independently.
 struct VehicleCardView: View {
     let vehicle: Vehicle

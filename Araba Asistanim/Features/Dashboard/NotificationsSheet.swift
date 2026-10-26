@@ -32,7 +32,7 @@ struct NotificationsSheet: View {
                     }
                 }
             }
-            .background(AppTheme.groupedBackground)
+            .appScreenBackground()
             .navigationTitle("Bildirimler")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

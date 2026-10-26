@@ -16,7 +16,7 @@ struct VehicleListView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(AppTheme.groupedBackground)
+            .appScreenBackground()
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Vehicle.self) { vehicle in
                 VehicleDetailView(vehicleID: vehicle.id, allowsDelete: true)

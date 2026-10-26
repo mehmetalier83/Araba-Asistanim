@@ -16,6 +16,7 @@ struct MainTabView: View {
                     .tag(tab)
             }
         }
+        .tint(AppTheme.primary)
     }
 
     @ViewBuilder

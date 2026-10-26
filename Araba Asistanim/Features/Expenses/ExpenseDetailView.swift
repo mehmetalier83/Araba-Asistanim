@@ -108,7 +108,7 @@ struct ExpenseDetailView: View {
                     .padding(.horizontal, AppSpacing.md)
                     .padding(.bottom, AppSpacing.xl)
                 }
-                .background(AppTheme.groupedBackground)
+                .appScreenBackground()
                 .navigationTitle(expense.category.displayName)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {

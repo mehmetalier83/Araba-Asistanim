@@ -4,6 +4,7 @@ struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var store: GarageStore
+    @EnvironmentObject private var authViewModel: AuthViewModel
     @State private var path = NavigationPath()
     @State private var isShowingNotifications = false
     @State private var plan = OnboardingPreferences.isPlanCardDismissed ? nil : OnboardingPreferences.load()
@@ -17,38 +18,34 @@ struct HomeView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
-                    header
+                    topBar
+                    greeting
 
                     if let plan {
                         planCard(plan)
                     }
 
                     if let vehicle, let insights {
-                        VehicleHeroCard(vehicle: vehicle) {
-                            path.append(HomeRoute.vehicleDetail(vehicle))
+                        MaintenanceScoreCard(score: insights.maintenanceScore) {
+                            appState.selectedTab = .maintenance
                         }
 
-                        quickActions
-                        statRow(vehicle: vehicle, insights: insights)
-
-                        if let item = insights.nextReminder {
-                            nextServiceBanner(item, remaining: insights.remainingKm(to: item))
-                        }
+                        statusGrid(vehicle: vehicle, insights: insights)
+                        aiInsights(insights)
+                        actionRow
 
                         if !recentActivityRecords.isEmpty {
                             recentActivity
-                            aiInsight(insights)
                         }
                     } else {
                         emptyGarageCard
                     }
                 }
-                .padding(.horizontal, AppSpacing.md)
+                .padding(.horizontal, AppSpacing.lg)
                 .padding(.bottom, AppSpacing.xl)
             }
-            .background(AppTheme.groupedBackground)
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
+            .appScreenBackground()
+            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: HomeRoute.self) { route in
                 switch route {
                 case .settings:
@@ -94,42 +91,112 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Header
+    // MARK: - Top bar
 
-    private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(HomeViewModel.greeting())
-                    .font(AppTypography.subheadline)
-                    .foregroundStyle(AppTheme.textSecondary)
+    private var topBar: some View {
+        HStack(spacing: AppSpacing.xs) {
+            CarMascot(animates: false, glows: false)
+                .padding(4)
+                .frame(width: 32, height: 32)
+                .background(LinearGradient.mascot(), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .accessibilityHidden(true)
 
-                Text(vehicle.map { "\($0.make) hazır 👋" } ?? "Hoş geldin 👋")
-                    .font(AppTypography.title)
-                    .foregroundStyle(AppTheme.textPrimary)
-
-                VehicleSwitcherMenu()
-            }
+            Text(AppBrand.name)
+                .font(AppTypography.headline)
+                .foregroundStyle(AppTheme.textPrimary)
 
             Spacer()
 
-            HStack(spacing: AppSpacing.xs) {
-                ZStack(alignment: .topTrailing) {
-                    IconButton(systemImage: "bell.fill", accessibilityLabel: "Bildirimler") {
-                        isShowingNotifications = true
-                    }
-                    if !store.attentionReminders.isEmpty {
-                        BadgeView(count: store.attentionReminders.count)
-                            .offset(x: -2, y: 2)
-                            .allowsHitTesting(false)
-                    }
+            ZStack(alignment: .topTrailing) {
+                IconButton(systemImage: "bell", accessibilityLabel: "Bildirimler") {
+                    isShowingNotifications = true
                 }
-
-                IconButton(systemImage: "gearshape.fill", accessibilityLabel: "Ayarlar") {
-                    path.append(HomeRoute.settings)
+                if !store.attentionReminders.isEmpty {
+                    Circle()
+                        .fill(LinearGradient.mascot(startPoint: .leading, endPoint: .trailing))
+                        .frame(width: 10, height: 10)
+                        .overlay(Circle().stroke(AppTheme.cardBackground, lineWidth: 2))
+                        .offset(x: -9, y: 9)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
                 }
             }
+            .accessibilityValue(store.attentionReminders.isEmpty ? "" : "\(store.attentionReminders.count) uyarı")
+
+            Button {
+                path.append(HomeRoute.settings)
+            } label: {
+                Text(authViewModel.currentUser?.initials ?? "")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: AppSizes.minTouchTarget, height: AppSizes.minTouchTarget)
+                    .background(LinearGradient.mascot(startPoint: .topLeading, endPoint: .bottomTrailing), in: Circle())
+                    .overlay(Circle().stroke(AppTheme.cardBackground, lineWidth: 2))
+            }
+            .buttonStyle(.appPressScale)
+            .accessibilityLabel("Profil ve Ayarlar")
         }
         .padding(.top, AppSpacing.xs)
+    }
+
+    // MARK: - Greeting
+
+    private var greeting: some View {
+        HStack(alignment: .center, spacing: 0) {
+            VStack(alignment: .leading, spacing: AppSpacing.xxs) {
+                Text(HomeViewModel.greeting())
+                    .font(AppTypography.title3.weight(.regular))
+                    .foregroundStyle(AppTheme.textPrimary)
+
+                Text("\(authViewModel.currentUser?.firstName ?? "Hoş geldin") 👋")
+                    .font(.system(.largeTitle, weight: .bold))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+
+                Text(vehicle == nil ? "Başlamak için aracını ekle." : "İşte aracının genel durumu.")
+                    .font(AppTypography.subheadline)
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .padding(.top, AppSpacing.xxs)
+
+                VehicleSwitcherMenu()
+                    .padding(.top, AppSpacing.xxs)
+            }
+
+            Spacer(minLength: AppSpacing.sm)
+
+            if let vehicle {
+                Button {
+                    path.append(HomeRoute.vehicleDetail(vehicle))
+                } label: {
+                    carGlyph
+                }
+                .buttonStyle(.appPressScale)
+                .accessibilityLabel("\(vehicle.displayName) detayları")
+            }
+        }
+    }
+
+    /// The vehicle illustration: a large gradient car glyph over a soft halo.
+    private var carGlyph: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [AppColors.mascotViolet.opacity(0.28), .clear],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: 80
+                    )
+                )
+                .frame(width: 160, height: 160)
+
+            Image(systemName: "car.side.fill")
+                .font(.system(size: 76))
+                .foregroundStyle(LinearGradient.mascot(startPoint: .topLeading, endPoint: .bottomTrailing))
+                .shadow(color: AppColors.mascotIndigo.opacity(0.35), radius: 14, y: 8)
+        }
+        .frame(width: 140, height: 120)
     }
 
     // MARK: - Plan
@@ -181,19 +248,9 @@ struct HomeView: View {
 
     // MARK: - Empty garage
 
-    /// Mirrors `VehicleHeroCard`'s exact visual treatment (same gradient,
-    /// glyph, corner radius and shadow) so the very first thing a brand-new
-    /// account sees still feels like the finished product, not a placeholder.
     private var emptyGarageCard: some View {
         ZStack(alignment: .bottomLeading) {
-            LinearGradient.graphiteSurface()
-
-            Image(systemName: "car.side.fill")
-                .font(.system(size: 108))
-                .foregroundStyle(.white.opacity(0.08))
-                .frame(width: 108, height: 108)
-                .offset(x: 56, y: 8)
-                .accessibilityHidden(true)
+            BrandHeroBackground()
 
             VStack(alignment: .leading, spacing: AppSpacing.md) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -203,7 +260,7 @@ struct HomeView: View {
 
                     Text("Bakım, yakıt ve giderlerini takip etmeye başlamak için ilk aracını ekle.")
                         .font(AppTypography.subheadline)
-                        .foregroundStyle(.white.opacity(0.7))
+                        .foregroundStyle(.white.opacity(0.85))
                 }
 
                 Button {
@@ -213,132 +270,160 @@ struct HomeView: View {
                         Text("Araç Ekle")
                         Image(systemName: "plus")
                     }
-                    .font(AppTypography.subheadline.weight(.medium))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, AppSpacing.sm)
+                    .font(AppTypography.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.mascotIndigo)
+                    .padding(.horizontal, AppSpacing.md)
                     .padding(.vertical, AppSpacing.xs)
-                    .background(.white.opacity(0.16))
-                    .clipShape(Capsule())
+                    .background(.white, in: Capsule())
                 }
                 .buttonStyle(.appPressScale)
             }
             .padding(AppSpacing.lg)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: 200)
         .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.hero, style: .continuous))
-        .appShadow()
+        .appShadow(AppShadow.primaryGlow)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Henüz aracın yok")
         .accessibilityHint("Araç eklemek için dokun")
     }
 
-    // MARK: - Quick actions
+    // MARK: - Status grid
 
-    private var quickActions: some View {
-        HStack(spacing: 0) {
-            ForEach(QuickActionType.allCases) { action in
-                Button {
-                    viewModel.selectQuickAction(action)
-                } label: {
-                    VStack(spacing: AppSpacing.xxs) {
-                        Image(systemName: action.systemImage)
-                            .font(.system(size: AppSizes.iconMedium * 0.75, weight: .medium))
-                            .foregroundStyle(action.tintColor)
-                            .frame(width: AppSizes.minTouchTarget, height: AppSizes.minTouchTarget)
-                            .background(action.tintColor.opacity(0.14))
-                            .clipShape(Circle())
+    private func statusGrid(vehicle: Vehicle, insights: GarageInsights) -> some View {
+        let next = insights.nextReminder
+        let nextSubtitle: String = {
+            guard let next else { return "Planlı bakım yok" }
+            guard next.tracksMileage else { return next.status.label }
+            let remaining = insights.remainingKm(to: next)
+            return remaining > 0 ? "\(remaining.formattedMileage()) kaldı" : "\(abs(remaining).formattedMileage()) geçti"
+        }()
 
-                        Text(action.title)
-                            .font(AppTypography.caption)
-                            .foregroundStyle(AppTheme.textSecondary)
-                            .lineLimit(1)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.appPressScale)
-                .accessibilityLabel(action.title)
+        return LazyVGrid(columns: [GridItem(.flexible(), spacing: AppSpacing.sm), GridItem(.flexible())], spacing: AppSpacing.sm) {
+            StatusTile(
+                systemImage: "calendar",
+                tint: next.map { $0.status.tagTone.foreground } ?? AppTheme.categoryPurple,
+                title: next?.title ?? "Sıradaki Bakım",
+                subtitle: nextSubtitle
+            ) {
+                appState.selectedTab = .maintenance
             }
-        }
-    }
 
-    // MARK: - Stat row
+            StatusTile(
+                systemImage: "gauge.with.dots.needle.67percent",
+                tint: AppTheme.primary,
+                title: "Kilometre",
+                subtitle: vehicle.mileageKm.formattedMileage()
+            ) {
+                path.append(HomeRoute.vehicleDetail(vehicle))
+            }
 
-    private func statRow(vehicle: Vehicle, insights: GarageInsights) -> some View {
-        let consumption = insights.latestConsumption
-        return HStack(spacing: AppSpacing.sm) {
-            FuelTrendCard(
-                value: consumption?.value.formattedFuelConsumption() ?? "—",
-                changePercent: consumption?.changePercent ?? 0,
-                history: Array(insights.monthlyConsumption(months: 6).suffix(6))
+            StatusTile(
+                systemImage: "fuelpump",
+                tint: AppTheme.categoryTeal,
+                title: "Ort. Tüketim",
+                subtitle: insights.latestConsumption?.value.formattedFuelConsumption() ?? "Henüz veri yok"
             ) {
                 appState.selectedTab = .analytics
             }
 
-            ExpenseBreakdownCard(
-                value: insights.thisMonthTotal.formattedCurrencyTL(),
-                changePercent: insights.monthlySpendingChangePercent,
-                breakdown: insights.thisMonthBreakdown
+            StatusTile(
+                systemImage: "turkishlirasign",
+                tint: AppTheme.success,
+                title: "Bu Ay Gider",
+                subtitle: insights.thisMonthTotal.formattedCurrencyTL()
             ) {
                 path.append(HomeRoute.expenses(vehicle))
             }
         }
     }
 
-    // MARK: - Next service
+    // MARK: - AI insights
 
-    private func nextServiceBanner(_ item: MaintenanceRecord, remaining: Int) -> some View {
-        let tone = item.status.tagTone
-        let mileageLine = !item.tracksMileage
-            ? item.status.label
-            : remaining > 0
-                ? "\(remaining.formattedMileage()) kaldı"
-                : "\(abs(remaining).formattedMileage()) geçti"
+    private func aiInsights(_ insights: GarageInsights) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            SectionHeader(title: "Son AI Önerileri", actionTitle: "Asistana Sor") {
+                appState.selectedTab = .aiAssistant
+            }
 
-        return Button {
-            appState.selectedTab = .maintenance
-        } label: {
-            HStack(spacing: AppSpacing.sm) {
-                Image(systemName: item.category.systemImage)
-                    .font(.system(size: AppSizes.iconMedium))
-                    .foregroundStyle(tone.foreground)
-                    .frame(width: AppSizes.avatarSize, height: AppSizes.avatarSize)
-                    .background(tone.background)
-                    .clipShape(Circle())
-                    .accessibilityHidden(true)
+            Button {
+                viewModel.isShowingInsightDetail = true
+            } label: {
+                HStack(spacing: AppSpacing.sm) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: AppSizes.iconSmall, weight: .semibold))
+                        .foregroundStyle(AppColors.mascotViolet)
+                        .frame(width: AppSizes.avatarSize, height: AppSizes.avatarSize)
+                        .background(AppColors.mascotViolet.opacity(0.12), in: Circle())
+                        .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 4) {
-                        Text("Sıradaki Bakım")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(insights.headline)
+                            .font(AppTypography.subheadline.weight(.medium))
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .multilineTextAlignment(.leading)
+
+                        Text("Detayları gör")
                             .font(AppTypography.caption)
                             .foregroundStyle(AppTheme.textSecondary)
-                        Text("· \(item.status.label)")
-                            .font(AppTypography.captionEmphasized)
-                            .foregroundStyle(tone.foreground)
                     }
 
-                    Text(item.title)
-                        .font(AppTypography.bodyEmphasized)
-                        .foregroundStyle(AppTheme.textPrimary)
+                    Spacer(minLength: 0)
 
-                    Text("\(mileageLine) · \(item.date.formattedDayMonthYear())")
-                        .font(AppTypography.caption)
-                        .foregroundStyle(AppTheme.textSecondary)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: AppSizes.iconXSmall, weight: .semibold))
+                        .foregroundStyle(AppTheme.textTertiary)
                 }
-
-                Spacer(minLength: AppSpacing.xs)
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: AppSizes.iconXSmall, weight: .semibold))
-                    .foregroundStyle(AppTheme.textTertiary)
+                .padding(AppSpacing.md)
+                .appCard()
             }
-            .padding(AppSpacing.md)
-            .background(tone.background)
-            .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous))
+            .buttonStyle(.appPressScale)
+            .accessibilityLabel("AI Analizi: \(insights.headline)")
+            .accessibilityHint("Detayları gör")
         }
-        .buttonStyle(.appPressScale)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Sıradaki bakım: \(item.title), \(item.status.label), \(mileageLine)")
-        .accessibilityHint("Bakım sekmesine git")
+    }
+
+    // MARK: - Actions
+
+    /// The add-record menu as a wide gradient pill, with a round AI button next to it.
+    private var actionRow: some View {
+        HStack(spacing: AppSpacing.sm) {
+            Menu {
+                ForEach(QuickActionType.allCases) { action in
+                    Button {
+                        viewModel.selectQuickAction(action)
+                    } label: {
+                        Label(action.title, systemImage: action.systemImage)
+                    }
+                }
+            } label: {
+                HStack(spacing: AppSpacing.xs) {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Kayıt Ekle")
+                }
+                .font(AppTypography.headline)
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(LinearGradient.mascot(startPoint: .leading, endPoint: .trailing), in: Capsule())
+                .appShadow(AppShadow.primaryGlow)
+            }
+            .accessibilityLabel("Kayıt Ekle")
+            .accessibilityHint("Yakıt, gider veya bakım ekle")
+
+            Button {
+                appState.selectedTab = .aiAssistant
+            } label: {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 56, height: 56)
+                    .background(LinearGradient.mascot(startPoint: .topLeading, endPoint: .bottomTrailing), in: Circle())
+                    .appShadow(AppShadow.primaryGlow)
+            }
+            .buttonStyle(.appPressScale)
+            .accessibilityLabel("AI Asistan")
+        }
     }
 
     // MARK: - Recent activity
@@ -359,39 +444,152 @@ struct HomeView: View {
             }
         }
     }
+}
 
-    // MARK: - AI insight
+// MARK: - Maintenance score card
 
-    private func aiInsight(_ insights: GarageInsights) -> some View {
-        Button {
-            viewModel.isShowingInsightDetail = true
-        } label: {
-            HStack(alignment: .top, spacing: AppSpacing.sm) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: AppSizes.iconSmall))
-                    .foregroundStyle(AppTheme.primary)
+/// The large score card: the number on the left, a thick gradient ring on the
+/// right. The score comes from `GarageInsights.maintenanceScore`; without any
+/// maintenance logged the card explains how to get one instead of inventing it.
+private struct MaintenanceScoreCard: View {
+    let score: Int?
+    let action: () -> Void
+
+    @State private var animatedProgress: Double = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var status: (label: String, color: Color) {
+        switch score ?? 0 {
+        case 90...: return ("Mükemmel", AppTheme.success)
+        case 70..<90: return ("İyi", AppTheme.success)
+        case 50..<70: return ("Dikkat", AppTheme.warning)
+        default: return ("Bakım gerekli", AppTheme.error)
+        }
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: AppSpacing.md) {
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text("Bakım Sağlık Skoru")
+                        .font(AppTypography.subheadline)
+                        .foregroundStyle(AppTheme.textSecondary)
+
+                    if let score {
+                        HStack(alignment: .firstTextBaseline, spacing: 2) {
+                            Text("\(score)")
+                                .font(.system(size: 56, weight: .bold, design: .rounded))
+                                .foregroundStyle(AppTheme.textPrimary)
+                                .contentTransition(.numericText())
+                            Text("%")
+                                .font(.system(.title2, design: .rounded, weight: .semibold))
+                                .foregroundStyle(AppTheme.textPrimary)
+                        }
+
+                        Text(status.label)
+                            .font(AppTypography.subheadline.weight(.semibold))
+                            .foregroundStyle(status.color)
+                    } else {
+                        Text("Henüz yok")
+                            .font(.system(.title, design: .rounded, weight: .bold))
+                            .foregroundStyle(AppTheme.textPrimary)
+
+                        Text("Bakım kaydı ekledikçe hesaplanır.")
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
+                }
+
+                Spacer(minLength: 0)
+
+                ring
+            }
+            .padding(AppSpacing.lg)
+            .appCard(cornerRadius: AppCornerRadius.hero)
+        }
+        .buttonStyle(.appPressScale)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(score.map { "Bakım sağlık skoru yüzde \($0), \(status.label)" } ?? "Bakım sağlık skoru henüz yok")
+        .accessibilityHint("Bakım sekmesine git")
+        .onAppear { animate(to: score) }
+        .onChange(of: score) { _, newValue in animate(to: newValue) }
+    }
+
+    private var ring: some View {
+        ZStack {
+            Circle()
+                .stroke(AppTheme.primarySubtle, lineWidth: 14)
+
+            Circle()
+                .trim(from: 0, to: animatedProgress)
+                .stroke(
+                    AngularGradient(
+                        colors: [AppColors.mascotIndigo, AppColors.mascotViolet, AppColors.mascotIndigo],
+                        center: .center
+                    ),
+                    style: StrokeStyle(lineWidth: 14, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+
+            Image(systemName: "heart.fill")
+                .font(.system(size: 20))
+                .foregroundStyle(LinearGradient.mascot(startPoint: .topLeading, endPoint: .bottomTrailing))
+                .frame(width: 52, height: 52)
+                .background(AppTheme.cardBackground, in: Circle())
+                .shadow(color: AppShadow.card.color, radius: 8, y: 3)
+        }
+        .frame(width: 116, height: 116)
+    }
+
+    private func animate(to score: Int?) {
+        let target = Double(score ?? 0) / 100
+        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.9)) {
+            animatedProgress = target
+        }
+    }
+}
+
+// MARK: - Status tile
+
+/// A small card in Home's 2×2 grid: a pastel icon badge, a title and a value.
+private struct StatusTile: View {
+    let systemImage: String
+    let tint: Color
+    let title: String
+    let subtitle: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: AppSpacing.sm) {
+                Image(systemName: systemImage)
+                    .font(.system(size: AppSizes.iconSmall, weight: .semibold))
+                    .foregroundStyle(tint)
+                    .frame(width: 38, height: 38)
+                    .background(tint.opacity(0.12), in: Circle())
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(insights.headline)
-                        .font(AppTypography.subheadline)
+                    Text(title)
+                        .font(AppTypography.subheadline.weight(.medium))
                         .foregroundStyle(AppTheme.textPrimary)
-                        .multilineTextAlignment(.leading)
-
-                    Text("Detayları Gör")
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                    Text(subtitle)
                         .font(AppTypography.caption)
-                        .foregroundStyle(AppTheme.primary)
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .lineLimit(2)
                 }
 
                 Spacer(minLength: 0)
             }
-            .padding(AppSpacing.md)
-            .background(AppTheme.primarySubtle)
-            .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous))
+            .padding(AppSpacing.sm)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .frame(minHeight: 68)
+            .appCard()
         }
         .buttonStyle(.appPressScale)
-        .accessibilityLabel("AI Analizi: \(insights.headline)")
-        .accessibilityHint("Detayları gör")
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -399,11 +597,19 @@ struct HomeView: View {
     HomeView()
         .environmentObject(AppState())
         .environmentObject(GarageStore.preview)
+        .environmentObject(AuthViewModel(repository: AuthRepository(
+            service: MockAuthService(),
+            secureStorage: InMemorySecureStorage()
+        )))
 }
 
 #Preview("Dark") {
     HomeView()
         .environmentObject(AppState())
         .environmentObject(GarageStore.preview)
+        .environmentObject(AuthViewModel(repository: AuthRepository(
+            service: MockAuthService(),
+            secureStorage: InMemorySecureStorage()
+        )))
         .preferredColorScheme(.dark)
 }

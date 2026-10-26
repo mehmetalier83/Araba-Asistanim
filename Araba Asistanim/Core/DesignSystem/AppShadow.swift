@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// Shadow is used sparingly by design — most surfaces separate themselves with a
-/// flat background-color change (grouped-list style), not elevation. Reserve this
-/// for the one or two truly floating elements per screen (e.g. the Home hero card).
+/// Cards float on the canvas with a wide, very soft indigo-tinted shadow
+/// (`card`, light mode only); `primaryGlow` sits under gradient buttons.
 struct AppShadowStyle {
     let color: Color
     let radius: CGFloat
@@ -18,13 +17,23 @@ enum AppShadow {
         y: 4
     )
 
+    @MainActor
+    static var card: AppShadowStyle {
+        AppShadowStyle(
+            color: Color(light: Color(hex: 0x3C3F8F).opacity(0.08), dark: .clear),
+            radius: 18,
+            x: 0,
+            y: 8
+        )
+    }
+
     /// A tinted glow under the app's primary call-to-action button — one of
     /// the "truly floating elements" this file's own doc comment carves out
     /// an exception for.
     @MainActor
     static var primaryGlow: AppShadowStyle {
         AppShadowStyle(
-            color: AppTheme.primary.opacity(0.35),
+            color: AppColors.mascotViolet.opacity(0.4),
             radius: 14,
             x: 0,
             y: 6

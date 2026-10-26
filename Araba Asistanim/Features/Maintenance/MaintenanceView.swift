@@ -54,7 +54,7 @@ struct MaintenanceView: View {
                     }
                 }
             }
-            .background(AppTheme.groupedBackground)
+            .appScreenBackground()
             .navigationTitle("Bakım")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

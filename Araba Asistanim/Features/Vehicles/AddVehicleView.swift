@@ -63,7 +63,7 @@ struct AddVehicleView: View {
                 }
                 .padding(AppSpacing.md)
             }
-            .background(AppTheme.background)
+            .appScreenBackground()
             .navigationTitle("Araç Ekle")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)

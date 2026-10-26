@@ -55,7 +55,7 @@ struct AIAssistantView: View {
                 }
                 .padding(AppSpacing.md)
             }
-            .background(AppTheme.background)
+            .appScreenBackground()
             .navigationTitle("AI Araç Asistanı")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

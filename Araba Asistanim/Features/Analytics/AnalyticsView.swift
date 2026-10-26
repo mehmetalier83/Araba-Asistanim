@@ -24,7 +24,7 @@ struct AnalyticsView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-            .background(AppTheme.groupedBackground)
+            .appScreenBackground()
             .navigationTitle("Analiz")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {

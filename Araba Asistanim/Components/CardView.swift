@@ -1,16 +1,15 @@
 import SwiftUI
 
 /// A generic container that applies the app's standard card styling
-/// (background, padding, corner radius) around any content.
+/// (card surface, generous padding, large radius) around any content.
 struct CardView<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
         content
-            .padding(AppSpacing.md)
+            .padding(AppSpacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppTheme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous))
+            .appCard()
     }
 }
 

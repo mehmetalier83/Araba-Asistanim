@@ -94,7 +94,7 @@ struct AddMaintenanceView: View {
                 .padding(AppSpacing.md)
                 .animation(reduceMotion ? nil : AppAnimation.fast, value: viewModel.didAutoFillFromReceipt)
             }
-            .background(AppTheme.background)
+            .appScreenBackground()
             .navigationTitle(isEditing ? "Bakımı Düzenle" : "Bakım Ekle")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)

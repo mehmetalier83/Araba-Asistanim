@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// A low-emphasis action alongside a PrimaryButton. Uses a soft tinted fill
-/// rather than an outline — avoids adding another border to the screen while
-/// still reading clearly as a distinct, tappable action.
+/// A low-emphasis action alongside a PrimaryButton: a card-colored pill with a
+/// hairline outline, so it reads as tappable without competing with the gradient.
 struct SecondaryButton: View {
     let title: String
     var isEnabled: Bool = true
@@ -17,7 +16,7 @@ struct SecondaryButton: View {
         } label: {
             ZStack {
                 Text(title)
-                    .font(AppTypography.headline)
+                    .font(.system(.headline, design: .rounded, weight: .semibold))
                     .opacity(isLoading ? 0 : 1)
 
                 if isLoading {
@@ -27,12 +26,12 @@ struct SecondaryButton: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: AppSizes.buttonHeight)
+            .frame(height: 54)
         }
         .buttonStyle(.appPressScale)
         .foregroundStyle(AppTheme.primary)
-        .background(AppTheme.primarySubtle)
-        .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
+        .background(AppTheme.cardBackground, in: Capsule())
+        .overlay(Capsule().stroke(AppTheme.primary.opacity(0.3), lineWidth: 1))
         .disabled(!isInteractive)
         .opacity(isEnabled ? 1 : 0.5)
         .accessibilityLabel(title)

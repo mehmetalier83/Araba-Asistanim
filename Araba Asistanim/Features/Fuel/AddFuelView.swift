@@ -109,7 +109,7 @@ struct AddFuelView: View {
                 .animation(reduceMotion ? nil : AppAnimation.fast, value: viewModel.pricePerLiterText)
                 .animation(reduceMotion ? nil : AppAnimation.fast, value: viewModel.didAutoFillFromReceipt)
             }
-            .background(AppTheme.background)
+            .appScreenBackground()
             .navigationTitle(isEditing ? "Yakıtı Düzenle" : "Yakıt Ekle")
             .navigationBarTitleDisplayMode(.inline)
             .scrollDismissesKeyboard(.interactively)

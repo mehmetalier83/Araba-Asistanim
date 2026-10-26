@@ -164,6 +164,16 @@ struct GarageInsights {
         reminder.mileageKm - vehicle.mileageKm
     }
 
+    /// A 0–100 score from the vehicle's open maintenance: each overdue item
+    /// costs 25 points and each due-soon item 10. `nil` until any maintenance
+    /// has been logged, so a brand-new vehicle doesn't show a meaningless 100.
+    var maintenanceScore: Int? {
+        guard !reminders.isEmpty || !completedMaintenance.isEmpty else { return nil }
+        let overdue = reminders.filter { $0.status == .overdue }.count
+        let dueSoon = reminders.filter { $0.status == .dueSoon }.count
+        return max(0, 100 - overdue * 25 - dueSoon * 10)
+    }
+
     // MARK: - Text insights
 
     /// A one-line headline for Home's insight card.

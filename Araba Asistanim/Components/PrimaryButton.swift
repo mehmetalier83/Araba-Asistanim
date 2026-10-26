@@ -19,7 +19,7 @@ struct PrimaryButton: View {
             ZStack {
                 HStack(spacing: AppSpacing.xs) {
                     Text(title)
-                        .font(AppTypography.headline)
+                        .font(.system(.headline, design: .rounded, weight: .semibold))
 
                     if let icon {
                         Image(systemName: icon)
@@ -35,12 +35,12 @@ struct PrimaryButton: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: AppSizes.buttonHeight)
+            .frame(height: 54)
         }
         .buttonStyle(.appPressScale)
         .background(LinearGradient.primaryButton())
         .foregroundStyle(.white)
-        .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
+        .clipShape(Capsule())
         .appShadow(AppShadow.primaryGlow)
         .disabled(!isInteractive)
         .opacity(isEnabled ? 1 : 0.5)

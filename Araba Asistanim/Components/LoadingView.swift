@@ -19,7 +19,7 @@ struct LoadingView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(AppTheme.background)
+        .appScreenBackground()
         .accessibilityElement(children: .combine)
     }
 }

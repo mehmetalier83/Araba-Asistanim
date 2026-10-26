@@ -24,16 +24,28 @@ extension Color {
 /// This file defines only the colors that make the app feel like *this* product:
 /// the accent and the semantic status colors, each independently tuned per appearance.
 enum AppColors {
-    /// "Circuit Blue" — a confident, engineered blue rather than default iOS system blue.
+    /// Indigo from the mascot gradient, deepened in light mode so it still
+    /// reads as text on white and lifted in dark mode for the navy canvas.
     static let accent = Color(
-        light: Color(hex: 0x2F5FE0),
-        dark: Color(hex: 0x6E97FF)
+        light: Color(hex: 0x5457E6),
+        dark: Color(hex: 0x9D98FF)
     )
 
     static let accentSubtle = Color(
-        light: Color(hex: 0x2F5FE0).opacity(0.10),
-        dark: Color(hex: 0x6E97FF).opacity(0.16)
+        light: Color(hex: 0x5457E6).opacity(0.10),
+        dark: Color(hex: 0x9D98FF).opacity(0.16)
     )
+
+    /// Page canvas: soft lavender in light mode, deep navy (the onboarding
+    /// canvas) in dark mode. `AppCanvas` adds the glow on top.
+    static let canvas = Color(light: Color(hex: 0xF4F3FC), dark: Color(hex: 0x0D0C24))
+    /// Cards on the canvas: white / deep indigo.
+    static let surface = Color(light: Color(hex: 0xFFFFFF), dark: Color(hex: 0x1D1B44))
+    /// Inputs, chips and icon buttons: a cool tint that stays visible on both
+    /// the canvas and a card.
+    static let field = Color(light: Color(hex: 0xEDECF8), dark: Color(hex: 0x2A2858))
+    /// Card outline — only visible in dark mode, where shadows don't read.
+    static let surfaceStroke = Color(light: .clear, dark: Color.white.opacity(0.08))
 
     /// Positive / completed / on-track states. Muted, not a saturated "success green".
     static let success = Color(
@@ -88,21 +100,10 @@ enum AppColors {
 }
 
 extension LinearGradient {
-    /// The primary call-to-action surface — a subtle top-to-bottom deepening
-    /// of the accent blue rather than a flat fill, so the main button on
-    /// every form reads as a deliberately crafted surface. Kept tight (two
-    /// close shades, not a rainbow) to stay within the app's restrained
-    /// palette philosophy.
+    /// The primary call-to-action surface: the mascot gradient, left to right.
     @MainActor
-    static func primaryButton(startPoint: UnitPoint = .top, endPoint: UnitPoint = .bottom) -> LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(light: Color(hex: 0x4472E8), dark: Color(hex: 0x82A6FF)),
-                Color(light: Color(hex: 0x2650C9), dark: Color(hex: 0x5A82E0))
-            ],
-            startPoint: startPoint,
-            endPoint: endPoint
-        )
+    static func primaryButton() -> LinearGradient {
+        mascot(startPoint: .leading, endPoint: .trailing)
     }
 
     /// The app icon's indigo → violet gradient, used by the mascot and the

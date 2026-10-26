@@ -19,8 +19,9 @@ struct IconButton: View {
                 .font(.system(size: AppSizes.iconMedium * 0.7, weight: .semibold))
                 .foregroundStyle(foregroundColor)
                 .frame(width: AppSizes.minTouchTarget, height: AppSizes.minTouchTarget)
-                .background(backgroundColor)
-                .clipShape(Circle())
+                .background(backgroundColor, in: Circle())
+                .overlay(Circle().stroke(AppColors.surfaceStroke, lineWidth: 1))
+                .appShadow(AppShadow.card)
         }
         .buttonStyle(.appPressScale)
         .accessibilityLabel(accessibilityLabel)
@@ -35,7 +36,7 @@ struct IconButton: View {
 
     private var backgroundColor: Color {
         switch style {
-        case .subtle: return AppTheme.secondaryBackground
+        case .subtle: return AppTheme.cardBackground
         case .prominent: return AppTheme.primarySubtle
         }
     }

@@ -95,7 +95,7 @@ struct VehicleDetailView: View {
             .padding(.horizontal, AppSpacing.md)
             .padding(.bottom, AppSpacing.xl)
         }
-        .background(AppTheme.groupedBackground)
+        .appScreenBackground()
         .navigationTitle(vehicle.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $isShowingAddExpense) {

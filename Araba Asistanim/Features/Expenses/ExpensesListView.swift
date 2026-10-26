@@ -88,7 +88,7 @@ struct ExpensesListView: View {
                 .scrollContentBackground(.hidden)
             }
         }
-        .background(AppTheme.groupedBackground)
+        .appScreenBackground()
         .navigationTitle("Giderler")
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
