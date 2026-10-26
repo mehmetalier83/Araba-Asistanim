@@ -20,15 +20,21 @@ struct NotificationsSheet: View {
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    List(reminders) { reminder in
-                        Button {
-                            store.selectedVehicleID = reminder.vehicleID
-                            dismiss()
-                            onOpenMaintenance()
-                        } label: {
-                            row(for: reminder)
+                    ScrollView {
+                        VStack(spacing: AppSpacing.sm) {
+                            ForEach(reminders) { reminder in
+                                Button {
+                                    store.selectedVehicleID = reminder.vehicleID
+                                    dismiss()
+                                    onOpenMaintenance()
+                                } label: {
+                                    row(for: reminder)
+                                }
+                                .buttonStyle(.appPressScale)
+                                .foregroundStyle(AppTheme.textPrimary)
+                            }
                         }
-                        .foregroundStyle(AppTheme.textPrimary)
+                        .padding(AppSpacing.md)
                     }
                 }
             }
@@ -47,16 +53,15 @@ struct NotificationsSheet: View {
     private func row(for reminder: MaintenanceRecord) -> some View {
         HStack(spacing: AppSpacing.sm) {
             Image(systemName: reminder.category.systemImage)
-                .font(.system(size: AppSizes.iconSmall))
+                .font(.system(size: AppSizes.iconSmall, weight: .semibold))
                 .foregroundStyle(reminder.status.tagTone.foreground)
-                .frame(width: AppSizes.iconLarge, height: AppSizes.iconLarge)
-                .background(reminder.status.tagTone.background)
-                .clipShape(Circle())
+                .frame(width: 42, height: 42)
+                .background(reminder.status.tagTone.background, in: Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(reminder.title)
-                    .font(AppTypography.bodyEmphasized)
+                    .font(.system(.body, design: .rounded, weight: .semibold))
                 Text("\(store.vehicle(withID: reminder.vehicleID)?.displayName ?? "") · \(reminder.dueSummary)")
                     .font(AppTypography.caption)
                     .foregroundStyle(AppTheme.textSecondary)
@@ -66,7 +71,8 @@ struct NotificationsSheet: View {
 
             TagView(text: reminder.status.label, tone: reminder.status.tagTone)
         }
-        .padding(.vertical, AppSpacing.xxs)
+        .padding(AppSpacing.md)
+        .appCard(cornerRadius: 18)
         .accessibilityElement(children: .combine)
     }
 }
