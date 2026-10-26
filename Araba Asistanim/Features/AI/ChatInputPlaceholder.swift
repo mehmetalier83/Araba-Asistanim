@@ -15,22 +15,27 @@ struct ChatInputPlaceholder: View {
         HStack(spacing: AppSpacing.sm) {
             TextField("Aracın hakkında sor...", text: $text)
                 .font(AppTypography.body)
-                .padding(.horizontal, AppSpacing.sm)
-                .padding(.vertical, AppSpacing.xs)
-                .background(AppTheme.secondaryBackground)
-                .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.pill, style: .continuous))
                 .submitLabel(.send)
                 .onSubmit { if canSend { onSend() } }
                 .accessibilityLabel("Mesaj girişi")
 
             Button(action: onSend) {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: AppSizes.iconLarge))
-                    .foregroundStyle(canSend ? AppTheme.primary : AppTheme.textSecondary)
+                Image(systemName: "arrow.up")
+                    .font(.system(size: AppSizes.iconSmall, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 38, height: 38)
+                    .background(
+                        canSend ? AnyShapeStyle(LinearGradient.mascot()) : AnyShapeStyle(AppTheme.textTertiary),
+                        in: Circle()
+                    )
             }
             .disabled(!canSend)
             .accessibilityLabel("Gönder")
         }
+        .padding(.leading, AppSpacing.md)
+        .padding(.trailing, 6)
+        .padding(.vertical, 6)
+        .appCard(cornerRadius: AppCornerRadius.pill)
     }
 }
 

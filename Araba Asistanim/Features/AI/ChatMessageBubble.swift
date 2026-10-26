@@ -1,11 +1,7 @@
 import SwiftUI
 
-/// User and assistant messages are deliberately styled with different
-/// hierarchy: the user's message is a filled bubble (something *they* said),
-/// while the assistant's reply reads as plain inline text with a small marker
-/// icon — closer to an answer the app is surfacing than a chat bubble. This
-/// keeps the AI feeling like an integrated feature rather than the visual
-/// focus of the app.
+/// User messages are mascot-gradient bubbles (something *they* said); the
+/// assistant answers on a card next to a small mascot avatar.
 struct ChatMessageBubble: View {
     let message: ChatMessage
 
@@ -19,26 +15,39 @@ struct ChatMessageBubble: View {
                 Text(message.text)
                     .font(AppTypography.body)
                     .foregroundStyle(.white)
-                    .padding(.horizontal, AppSpacing.sm)
-                    .padding(.vertical, AppSpacing.xs)
-                    .background(AppTheme.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous))
+                    .padding(.horizontal, AppSpacing.md)
+                    .padding(.vertical, AppSpacing.sm)
+                    .background(
+                        LinearGradient.primaryButton(),
+                        in: UnevenRoundedRectangle(topLeadingRadius: 20, bottomLeadingRadius: 20, bottomTrailingRadius: 6, topTrailingRadius: 20, style: .continuous)
+                    )
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Sen: \(message.text)")
         } else {
             HStack(alignment: .top, spacing: AppSpacing.xs) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: AppSizes.iconXSmall))
-                    .foregroundStyle(AppTheme.primary)
-                    .padding(.top, 3)
+                CarMascot(animates: false, glows: false)
+                    .padding(4)
+                    .frame(width: 32, height: 32)
+                    .background(LinearGradient.mascot(), in: Circle())
                     .accessibilityHidden(true)
 
                 Text(message.text)
                     .font(AppTypography.body)
                     .foregroundStyle(AppTheme.textPrimary)
+                    .padding(.horizontal, AppSpacing.md)
+                    .padding(.vertical, AppSpacing.sm)
+                    .background(
+                        AppTheme.cardBackground,
+                        in: UnevenRoundedRectangle(topLeadingRadius: 6, bottomLeadingRadius: 20, bottomTrailingRadius: 20, topTrailingRadius: 20, style: .continuous)
+                    )
+                    .overlay(
+                        UnevenRoundedRectangle(topLeadingRadius: 6, bottomLeadingRadius: 20, bottomTrailingRadius: 20, topTrailingRadius: 20, style: .continuous)
+                            .stroke(AppColors.surfaceStroke, lineWidth: 1)
+                    )
+                    .appShadow(AppShadow.card)
 
-                Spacer(minLength: AppSizes.iconHero)
+                Spacer(minLength: AppSizes.iconLarge)
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Asistan: \(message.text)")
