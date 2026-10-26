@@ -11,7 +11,8 @@ struct MonthlyExpensesChartView: View {
                 x: .value("Ay", point.month),
                 y: .value("Giderler", point.value)
             )
-            .foregroundStyle(AppTheme.primary)
+            .foregroundStyle(LinearGradient.mascot(startPoint: .bottom, endPoint: .top))
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
             .annotation(position: .top) {
                 Text(point.value, format: .number.precision(.fractionLength(0)))
                     .font(.caption2)

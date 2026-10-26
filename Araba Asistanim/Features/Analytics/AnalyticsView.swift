@@ -3,6 +3,8 @@ import SwiftUI
 struct AnalyticsView: View {
     @EnvironmentObject private var store: GarageStore
     @State private var timeRange: AnalyticsTimeRange = .sixMonths
+    @Namespace private var rangeSwitch
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var insights: GarageInsights? {
         store.selectedVehicle.map { GarageInsights(store: store, vehicle: $0) }
@@ -91,13 +93,35 @@ struct AnalyticsView: View {
         }
     }
 
+    /// A pill switch in the onboarding style: the selection slides between ranges.
     private var timeRangePicker: some View {
-        Picker("Zaman Aralığı", selection: $timeRange.animation(AppAnimation.fast)) {
+        HStack(spacing: 0) {
             ForEach(AnalyticsTimeRange.allCases) { range in
-                Text(range.rawValue).tag(range)
+                Button {
+                    withAnimation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.82)) { timeRange = range }
+                } label: {
+                    Text(range.rawValue)
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(timeRange == range ? .white : AppTheme.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 38)
+                        .background {
+                            if timeRange == range {
+                                Capsule()
+                                    .fill(LinearGradient.primaryButton())
+                                    .matchedGeometryEffect(id: "range", in: rangeSwitch)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(timeRange == range ? [.isButton, .isSelected] : .isButton)
             }
         }
-        .pickerStyle(.segmented)
+        .padding(4)
+        .background(AppTheme.cardBackground, in: Capsule())
+        .overlay(Capsule().stroke(AppColors.surfaceStroke, lineWidth: 1))
+        .appShadow(AppShadow.card)
+        .sensoryFeedback(.selection, trigger: timeRange)
     }
 
     private func chartSection<Content: View>(
@@ -105,17 +129,17 @@ struct AnalyticsView: View {
         subtitle: String,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(AppTypography.headline)
-                    .foregroundStyle(AppTheme.textPrimary)
-                Text(subtitle)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppTheme.textSecondary)
-            }
+        CardView {
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(.headline, design: .rounded))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Text(subtitle)
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
 
-            CardView {
                 content()
             }
         }

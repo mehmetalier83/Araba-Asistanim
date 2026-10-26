@@ -26,7 +26,20 @@ struct SpendingByCategoryChartView: View {
                     .foregroundStyle(entry.category.tintColor)
                     .cornerRadius(3)
                 }
-                .frame(width: 120, height: 120)
+                .chartBackground { _ in
+                    VStack(spacing: 0) {
+                        Text("Toplam")
+                            .font(.caption2)
+                            .foregroundStyle(AppTheme.textSecondary)
+                        Text(total.formattedCurrencyTL())
+                            .font(.system(.caption, design: .rounded, weight: .bold))
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                    }
+                    .frame(width: 70)
+                }
+                .frame(width: 130, height: 130)
                 .accessibilityLabel("Kategoriye göre giderler")
                 .accessibilityValue(accessibilitySummary)
 

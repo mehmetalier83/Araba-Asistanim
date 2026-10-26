@@ -7,11 +7,21 @@ struct FuelConsumptionChartView: View {
 
     var body: some View {
         Chart(data) { point in
+            AreaMark(
+                x: .value("Ay", point.month),
+                y: .value("Tüketim", point.value)
+            )
+            .foregroundStyle(
+                LinearGradient(colors: [AppColors.mascotViolet.opacity(0.28), AppColors.mascotViolet.opacity(0)], startPoint: .top, endPoint: .bottom)
+            )
+            .interpolationMethod(.catmullRom)
+
             LineMark(
                 x: .value("Ay", point.month),
                 y: .value("Tüketim", point.value)
             )
-            .foregroundStyle(AppTheme.primary)
+            .foregroundStyle(LinearGradient.primaryButton())
+            .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
             .symbol(.circle)
             .interpolationMethod(.catmullRom)
 
@@ -19,7 +29,7 @@ struct FuelConsumptionChartView: View {
                 x: .value("Ay", point.month),
                 y: .value("Tüketim", point.value)
             )
-            .foregroundStyle(AppTheme.primary)
+            .foregroundStyle(AppColors.mascotViolet)
         }
         .chartYAxis {
             AxisMarks(position: .leading)

@@ -27,7 +27,7 @@ struct StatisticCard: View {
                 .lineLimit(2, reservesSpace: true)
         }
         .padding(AppSpacing.md)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .appCard()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(statistic.title): \(statistic.value)")
