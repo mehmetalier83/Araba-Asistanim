@@ -34,9 +34,10 @@ struct SettingsView: View {
     var body: some View {
         List {
             if let user = authViewModel.currentUser {
-                Section("Hesap") {
+                Section {
                     accountHeader(for: user)
-                    SettingsRowView(row: Row(title: "E-posta", systemImage: "envelope.fill", value: user.email, message: ""), isInformational: true, action: nil)
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
                 }
             }
 
@@ -46,12 +47,14 @@ struct SettingsView: View {
                     SettingsRowView(row: row) { activeRow = row }
                 }
             }
+            .listRowBackground(AppTheme.cardBackground)
 
             Section("Hakkında") {
                 ForEach(aboutRows) { row in
                     SettingsRowView(row: row) { activeRow = row }
                 }
             }
+            .listRowBackground(AppTheme.cardBackground)
 
             Section {
                 Button(role: .destructive) {
@@ -60,11 +63,12 @@ struct SettingsView: View {
                     HStack {
                         Spacer()
                         Text("Çıkış Yap")
-                            .font(AppTypography.bodyEmphasized)
+                            .font(.system(.body, design: .rounded, weight: .semibold))
                         Spacer()
                     }
                 }
             }
+            .listRowBackground(AppTheme.cardBackground)
 
             Section {
                 Button(role: .destructive) {
@@ -84,7 +88,9 @@ struct SettingsView: View {
             } footer: {
                 Text("Hesabın ve tüm araç, yakıt, bakım ve gider kayıtların kalıcı olarak silinir.")
             }
+            .listRowBackground(AppTheme.cardBackground)
         }
+        .appScreenBackground()
         .navigationTitle("Ayarlar")
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
@@ -133,8 +139,7 @@ struct SettingsView: View {
                     .font(.system(size: AppSizes.iconXSmall))
                     .foregroundStyle(AppTheme.primary)
                     .frame(width: AppSizes.iconLarge, height: AppSizes.iconLarge)
-                    .background(AppTheme.primarySubtle)
-                    .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.small, style: .continuous))
+                    .background(AppTheme.primarySubtle, in: Circle())
                     .accessibilityHidden(true)
 
                 Text("Görünüm")
@@ -160,21 +165,32 @@ struct SettingsView: View {
         }
     }
 
+    /// The profile on the brand gradient: initials, name and email.
     private func accountHeader(for user: User) -> some View {
-        HStack(spacing: AppSpacing.sm) {
+        HStack(spacing: AppSpacing.md) {
             Text(user.initials)
-                .font(AppTypography.headline)
-                .foregroundStyle(.white)
-                .frame(width: AppSizes.avatarSize, height: AppSizes.avatarSize)
-                .background(AppTheme.primary)
-                .clipShape(Circle())
+                .font(.system(.title3, design: .rounded, weight: .bold))
+                .foregroundStyle(AppColors.mascotIndigo)
+                .frame(width: 56, height: 56)
+                .background(.white, in: Circle())
                 .accessibilityHidden(true)
 
-            Text(user.fullName)
-                .font(AppTypography.bodyEmphasized)
-                .foregroundStyle(AppTheme.textPrimary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(user.fullName)
+                    .font(.system(.headline, design: .rounded))
+                    .foregroundStyle(.white)
+                Text(user.email)
+                    .font(AppTypography.subheadline)
+                    .foregroundStyle(.white.opacity(0.85))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+
+            Spacer(minLength: 0)
         }
-        .padding(.vertical, AppSpacing.xxs)
+        .padding(AppSpacing.lg)
+        .background(BrandHeroBackground(showsCarGlyph: false))
+        .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.hero, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 
@@ -200,8 +216,7 @@ struct SettingsView: View {
                     .font(.system(size: AppSizes.iconXSmall))
                     .foregroundStyle(AppTheme.primary)
                     .frame(width: AppSizes.iconLarge, height: AppSizes.iconLarge)
-                    .background(AppTheme.primarySubtle)
-                    .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.small, style: .continuous))
+                    .background(AppTheme.primarySubtle, in: Circle())
                     .accessibilityHidden(true)
 
                 Text(row.title)
