@@ -33,6 +33,10 @@ struct MaintenanceView: View {
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: AppSpacing.xl) {
+                            if let vehicle {
+                                summaryCard(for: vehicle)
+                            }
+
                             if !overdue.isEmpty {
                                 section(title: "Gecikenler", records: overdue)
                             }
@@ -98,9 +102,77 @@ struct MaintenanceView: View {
         }
     }
 
+    // MARK: - Summary
+
+    /// The vehicle's maintenance at a glance on the brand gradient: the score
+    /// (from `GarageInsights`), the next item and how many are open.
+    private func summaryCard(for vehicle: Vehicle) -> some View {
+        let insights = GarageInsights(store: store, vehicle: vehicle)
+        let next = insights.nextReminder
+
+        return VStack(alignment: .leading, spacing: AppSpacing.md) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Bakım Durumu")
+                        .font(AppTypography.subheadline.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.85))
+                    Text(insights.maintenanceScore.map { "%\($0)" } ?? "—")
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
+                Spacer()
+                Image(systemName: "wrench.and.screwdriver.fill")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 52, height: 52)
+                    .background(.white.opacity(0.2), in: Circle())
+                    .accessibilityHidden(true)
+            }
+
+            if let next {
+                HStack(spacing: AppSpacing.xs) {
+                    Image(systemName: next.category.systemImage)
+                    Text("Sıradaki: \(next.title) · \(next.dueSummary)")
+                        .lineLimit(2)
+                }
+                .font(AppTypography.subheadline)
+                .foregroundStyle(.white)
+            }
+
+            HStack(spacing: AppSpacing.xs) {
+                countChip("Geciken", overdue.count)
+                countChip("Yaklaşan", dueSoon.count)
+                countChip("Planlı", upcoming.count)
+            }
+        }
+        .padding(AppSpacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BrandHeroBackground(showsCarGlyph: false))
+        .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.hero, style: .continuous))
+        .appShadow(AppShadow.primaryGlow)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func countChip(_ title: String, _ count: Int) -> some View {
+        HStack(spacing: 6) {
+            Text("\(count)")
+                .font(.system(.subheadline, design: .rounded, weight: .bold))
+            Text(title)
+                .font(.caption.weight(.medium))
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, AppSpacing.sm)
+        .padding(.vertical, 6)
+        .background(.white.opacity(count > 0 ? 0.22 : 0.12), in: Capsule())
+    }
+
+    // MARK: - Sections
+
     private func section(title: String, records: [MaintenanceRecord]) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            SectionHeader(title: title)
+            Text(title)
+                .font(.system(.title3, design: .rounded, weight: .bold))
+                .foregroundStyle(AppTheme.textPrimary)
 
             CardView {
                 VStack(spacing: 0) {
@@ -130,7 +202,7 @@ struct MaintenanceView: View {
                             }
                         if index < records.count - 1 {
                             Divider()
-                                .padding(.leading, AppSizes.iconLarge + AppSpacing.sm)
+                                .padding(.leading, 40 + AppSpacing.sm)
                         }
                     }
                 }
@@ -146,13 +218,12 @@ private struct MaintenanceRecordRow: View {
     let record: MaintenanceRecord
 
     var body: some View {
-        HStack(alignment: .top, spacing: AppSpacing.sm) {
+        HStack(alignment: .center, spacing: AppSpacing.sm) {
             Image(systemName: record.category.systemImage)
-                .font(.system(size: AppSizes.iconSmall))
+                .font(.system(size: AppSizes.iconSmall, weight: .semibold))
                 .foregroundStyle(record.status.tagTone.foreground)
-                .frame(width: AppSizes.iconLarge, height: AppSizes.iconLarge)
-                .background(record.status.tagTone.background)
-                .clipShape(Circle())
+                .frame(width: 40, height: 40)
+                .background(record.status.tagTone.background, in: Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -169,7 +240,7 @@ private struct MaintenanceRecordRow: View {
 
             if let cost = record.cost {
                 Text(cost.formattedCurrencyTL())
-                    .font(AppTypography.bodyEmphasized)
+                    .font(.system(.body, design: .rounded, weight: .semibold))
                     .foregroundStyle(AppTheme.textPrimary)
             } else {
                 TagView(text: record.status.label, tone: record.status.tagTone)
