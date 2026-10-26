@@ -35,7 +35,7 @@ struct VehicleListView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                 Text("Araçlar")
-                    .font(AppTypography.largeTitle)
+                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
                     .foregroundStyle(AppTheme.textPrimary)
 
                 Text("Aracını ekle, tüm bilgilerini tek yerde yönet.")
@@ -52,11 +52,10 @@ struct VehicleListView: View {
                     .font(.system(size: AppSizes.iconSmall, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(width: AppSizes.avatarSize, height: AppSizes.avatarSize)
-                    .background(AppTheme.primary)
-                    .clipShape(Circle())
+                    .background(LinearGradient.mascot(), in: Circle())
             }
             .buttonStyle(.appPressScale)
-            .appShadow()
+            .appShadow(AppShadow.primaryGlow)
             .accessibilityLabel("Araç Ekle")
         }
     }
@@ -77,10 +76,13 @@ struct VehicleListView: View {
             } else {
                 List {
                     ForEach(store.vehicles) { vehicle in
-                        NavigationLink(value: vehicle) {
-                            VehicleCardView(vehicle: vehicle)
-                        }
-                        .buttonStyle(.appPressScale)
+                        // The link is laid under the card so the List doesn't
+                        // add its own disclosure chevron outside the card.
+                        VehicleCardView(vehicle: vehicle)
+                            .background {
+                                NavigationLink(value: vehicle) { EmptyView() }
+                                    .opacity(0)
+                            }
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
                         .listRowInsets(EdgeInsets(top: 0, leading: AppSpacing.md, bottom: AppSpacing.sm, trailing: AppSpacing.md))

@@ -1,40 +1,60 @@
 import SwiftUI
 
-/// A compact row representing one vehicle in a list. No chevron of its own —
-/// it's always used inside a List via NavigationLink, which already supplies
-/// the disclosure indicator; adding a second one would double up. For the
-/// single-vehicle hero treatment see the Vehicle Detail header — a list
-/// row and a hero element have different jobs and are styled independently.
+/// One vehicle in the Araçlar list: a gradient car tile, the name, year and
+/// mileage, spec chips and a chevron. The NavigationLink is attached by the list.
 struct VehicleCardView: View {
     let vehicle: Vehicle
 
     var body: some View {
-        HStack(spacing: AppSpacing.sm) {
+        HStack(spacing: AppSpacing.md) {
             Image(systemName: "car.side.fill")
-                .font(.system(size: AppSizes.iconMedium))
-                .foregroundStyle(AppTheme.primary)
-                .frame(width: AppSizes.avatarSize, height: AppSizes.avatarSize)
-                .background(AppTheme.primarySubtle)
-                .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
+                .font(.system(size: 24, weight: .medium))
+                .foregroundStyle(.white)
+                .frame(width: 56, height: 56)
+                .background(LinearGradient.mascot(), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(vehicle.displayName)
-                    .font(AppTypography.bodyEmphasized)
+                    .font(.system(.headline, design: .rounded))
                     .foregroundStyle(AppTheme.textPrimary)
 
                 Text("\(vehicle.year.description) · \(vehicle.mileageKm.formattedMileage())")
                     .font(AppTypography.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
+
+                HStack(spacing: 6) {
+                    chip(vehicle.fuelType.displayName, systemImage: "fuelpump.fill")
+                    if !vehicle.transmission.isEmpty {
+                        chip(vehicle.transmission, systemImage: "gearshape.fill")
+                    }
+                }
             }
 
-            Spacer()
+            Spacer(minLength: 0)
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: AppSizes.iconXSmall, weight: .semibold))
+                .foregroundStyle(AppTheme.textTertiary)
         }
         .padding(AppSpacing.md)
-        .background(AppTheme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous))
+        .appCard()
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(vehicle.displayName), \(vehicle.year.description), \(vehicle.mileageKm.formattedMileage())")
+        .accessibilityAddTraits(.isButton)
+    }
+
+    private func chip(_ text: String, systemImage: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: systemImage)
+            Text(text)
+        }
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(AppTheme.primary)
+            .lineLimit(1)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(AppTheme.primarySubtle, in: Capsule())
     }
 }
 

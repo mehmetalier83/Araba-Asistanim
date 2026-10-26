@@ -63,9 +63,10 @@ struct VehicleDetailView: View {
                             ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
                                 HStack(spacing: AppSpacing.sm) {
                                     Image(systemName: row.systemImage)
-                                        .font(.system(size: AppSizes.iconSmall))
+                                        .font(.system(size: 13, weight: .semibold))
                                         .foregroundStyle(AppTheme.primary)
-                                        .frame(width: AppSizes.iconLarge)
+                                        .frame(width: 32, height: 32)
+                                        .background(AppTheme.primarySubtle, in: Circle())
                                         .accessibilityHidden(true)
 
                                     Text(row.label)
@@ -229,44 +230,50 @@ struct VehicleDetailView: View {
     }
 
     private func header(for vehicle: Vehicle) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            LinearGradient.graphiteSurface()
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(vehicle.displayName)
+                    .font(.system(.title, design: .rounded, weight: .bold))
+                    .foregroundStyle(.white)
+                Text("\(vehicle.year.description) · \(vehicle.engine)")
+                    .font(AppTypography.subheadline)
+                    .foregroundStyle(.white.opacity(0.8))
+                    .lineLimit(1)
+            }
 
-            Image(systemName: "car.side.fill")
-                .font(.system(size: 108))
-                .foregroundStyle(.white.opacity(0.08))
-                .frame(width: 108, height: 108)
-                .offset(x: 56, y: 8)
-                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(vehicle.mileageKm.formattedMileage())
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                Text("Güncel kilometre")
+                    .font(AppTypography.caption)
+                    .foregroundStyle(.white.opacity(0.75))
+            }
 
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(vehicle.displayName)
-                        .font(AppTypography.title2)
-                        .foregroundStyle(.white)
-
-                    Text(vehicle.year.description)
-                        .font(AppTypography.subheadline)
-                        .foregroundStyle(.white.opacity(0.7))
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(vehicle.mileageKm.formattedMileage())
-                        .font(AppTypography.heroValue)
-                        .foregroundStyle(.white)
-
-                    Text("Güncel kilometre")
-                        .font(AppTypography.caption)
-                        .foregroundStyle(.white.opacity(0.6))
+            HStack(spacing: AppSpacing.xs) {
+                heroChip(vehicle.fuelType.displayName, systemImage: "fuelpump.fill")
+                if !vehicle.transmission.isEmpty {
+                    heroChip(vehicle.transmission, systemImage: "gearshape.fill")
                 }
             }
-            .padding(AppSpacing.lg)
         }
-        .frame(maxWidth: .infinity)
+        .padding(AppSpacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BrandHeroBackground())
         .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.hero, style: .continuous))
-        .appShadow()
+        .appShadow(AppShadow.primaryGlow)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(vehicle.displayName), \(vehicle.year.description), \(vehicle.mileageKm.formattedMileage())")
+    }
+
+    private func heroChip(_ text: String, systemImage: String) -> some View {
+        Label(text, systemImage: systemImage)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.white)
+            .lineLimit(1)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(.white.opacity(0.18), in: Capsule())
     }
 }
 
