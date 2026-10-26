@@ -27,7 +27,7 @@ struct AddVehicleView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                         Text("Aracını ekle")
-                            .font(AppTypography.largeTitle)
+                            .font(.system(.largeTitle, design: .rounded, weight: .bold))
                             .foregroundStyle(AppTheme.textPrimary)
 
                         Text("Marka ve modeli ara, geri kalan bilgileri gir.")
@@ -56,6 +56,8 @@ struct AddVehicleView: View {
                                 .onChange(of: viewModel.mileage) { viewModel.clearMileageError() }
                         }
                     }
+                    .padding(AppSpacing.md)
+                    .appCard()
 
                     PrimaryButton(title: "Araç Ekle", icon: "arrow.right") {
                         submit()

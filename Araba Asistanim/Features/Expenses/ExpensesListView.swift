@@ -13,8 +13,6 @@ struct ExpensesListView: View {
     @State private var isShowingAddExpense = false
     @State private var editingExpense: ExpenseRecord?
 
-    private let summaryColumns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
-
     private var insights: GarageInsights { GarageInsights(store: store, vehicle: vehicle) }
     private var expenses: [ExpenseRecord] { store.spending(for: vehicle.id) }
     private var thisMonthExpenses: [ExpenseRecord] {
@@ -53,12 +51,19 @@ struct ExpensesListView: View {
                     ForEach(groupedExpenses, id: \.header) { group in
                         Section {
                             ForEach(group.records) { expense in
-                                NavigationLink {
-                                    ExpenseDetailView(vehicle: vehicle, expenseID: expense.id)
-                                } label: {
-                                    ExpenseRowView(expense: expense)
-                                }
-                                .listRowInsets(EdgeInsets(top: 0, leading: AppSpacing.md, bottom: 0, trailing: AppSpacing.md))
+                                // Link laid under the card so the List adds no chevron of its own.
+                                ExpenseRowView(expense: expense)
+                                    .background {
+                                        NavigationLink {
+                                            ExpenseDetailView(vehicle: vehicle, expenseID: expense.id)
+                                        } label: {
+                                            EmptyView()
+                                        }
+                                        .opacity(0)
+                                    }
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(Color.clear)
+                                    .listRowInsets(EdgeInsets(top: 0, leading: AppSpacing.md, bottom: AppSpacing.xs, trailing: AppSpacing.md))
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button(role: .destructive) {
                                         withAnimation(reduceMotion ? nil : AppAnimation.standard) {
@@ -79,8 +84,9 @@ struct ExpensesListView: View {
                             }
                         } header: {
                             Text(group.header)
-                                .font(AppTypography.captionEmphasized)
+                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
                                 .foregroundStyle(AppTheme.textSecondary)
+                                .textCase(nil)
                         }
                     }
                 }
@@ -113,26 +119,47 @@ struct ExpensesListView: View {
         }
     }
 
+    /// This month's total on the brand gradient, with the year and all-time
+    /// totals as chips.
     private var summaryRow: some View {
-        LazyVGrid(columns: summaryColumns, spacing: AppSpacing.sm) {
-            StatisticCard(statistic: Statistic(
-                title: "Bu Ay · \(thisMonthExpenses.count) işlem",
-                value: insights.thisMonthTotal.formattedCurrencyTL(),
-                systemImage: "calendar"
-            ))
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Bu Ay · \(thisMonthExpenses.count) işlem")
+                    .font(AppTypography.subheadline.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.85))
+                Text(insights.thisMonthTotal.formattedCurrencyTL())
+                    .font(.system(size: 38, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .contentTransition(.numericText())
+            }
 
-            StatisticCard(statistic: Statistic(
-                title: "Bu Yıl",
-                value: insights.thisYearTotal.formattedCurrencyTL(),
-                systemImage: "chart.bar.fill"
-            ))
-
-            StatisticCard(statistic: Statistic(
-                title: "Toplam",
-                value: insights.allTimeTotal.formattedCurrencyTL(),
-                systemImage: "banknote.fill"
-            ))
+            HStack(spacing: AppSpacing.xs) {
+                summaryChip(title: "Bu yıl", value: insights.thisYearTotal.formattedCurrencyTL())
+                summaryChip(title: "Toplam", value: insights.allTimeTotal.formattedCurrencyTL())
+            }
         }
+        .padding(AppSpacing.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(BrandHeroBackground(showsCarGlyph: false))
+        .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.hero, style: .continuous))
+        .appShadow(AppShadow.primaryGlow)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func summaryChip(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(.white.opacity(0.75))
+            Text(value)
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .padding(.horizontal, AppSpacing.sm)
+        .padding(.vertical, 6)
+        .background(.white.opacity(0.18), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 
@@ -142,13 +169,12 @@ private struct ExpenseRowView: View {
     let expense: ExpenseRecord
 
     var body: some View {
-        HStack(alignment: .top, spacing: AppSpacing.sm) {
+        HStack(alignment: .center, spacing: AppSpacing.sm) {
             Image(systemName: expense.category.systemImage)
-                .font(.system(size: AppSizes.iconSmall))
+                .font(.system(size: AppSizes.iconSmall, weight: .semibold))
                 .foregroundStyle(expense.category.tintColor)
-                .frame(width: AppSizes.iconLarge, height: AppSizes.iconLarge)
-                .background(expense.category.tintColor.opacity(0.12))
-                .clipShape(Circle())
+                .frame(width: 42, height: 42)
+                .background(expense.category.tintColor.opacity(0.14), in: Circle())
                 .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -168,7 +194,7 @@ private struct ExpenseRowView: View {
 
             VStack(alignment: .trailing, spacing: 2) {
                 Text(expense.amount.formattedCurrencyTL())
-                    .font(AppTypography.bodyEmphasized)
+                    .font(.system(.body, design: .rounded, weight: .semibold))
                     .foregroundStyle(AppTheme.textPrimary)
 
                 if let mileage = expense.mileageKm {
@@ -178,8 +204,10 @@ private struct ExpenseRowView: View {
                 }
             }
         }
-        .padding(.vertical, AppSpacing.sm)
+        .padding(AppSpacing.md)
+        .appCard(cornerRadius: 18)
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
         .accessibilityLabel(
             "\(expense.category.displayName), \(expense.serviceName ?? ""), \(expense.amount.formattedCurrencyTL())"
         )

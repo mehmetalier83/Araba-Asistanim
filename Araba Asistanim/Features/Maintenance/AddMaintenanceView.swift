@@ -37,7 +37,7 @@ struct AddMaintenanceView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                         Text(isEditing ? "Bakımı düzenle" : "Bakım ekle")
-                            .font(AppTypography.largeTitle)
+                            .font(.system(.largeTitle, design: .rounded, weight: .bold))
                             .foregroundStyle(AppTheme.textPrimary)
 
                         Text("\(vehicle.displayName) için bakım bilgilerini gir.")
@@ -112,11 +112,14 @@ struct AddMaintenanceView: View {
     private func section<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             Text(title)
-                .font(AppTypography.headline)
+                .font(.system(.headline, design: .rounded))
                 .foregroundStyle(AppTheme.textPrimary)
 
             content()
         }
+        .padding(AppSpacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCard()
     }
 
     private var categoryGrid: some View {

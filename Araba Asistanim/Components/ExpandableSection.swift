@@ -46,5 +46,8 @@ struct ExpandableSection<Content: View>: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
+        .padding(AppSpacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCard()
     }
 }

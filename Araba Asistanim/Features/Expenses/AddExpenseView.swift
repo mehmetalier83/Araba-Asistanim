@@ -40,7 +40,7 @@ struct AddExpenseView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                         Text(isEditing ? "Gideri düzenle" : "Yeni gider")
-                            .font(AppTypography.largeTitle)
+                            .font(.system(.largeTitle, design: .rounded, weight: .bold))
                             .foregroundStyle(AppTheme.textPrimary)
 
                         Text("\(vehicle.displayName) için gider bilgilerini gir.")
@@ -122,11 +122,14 @@ struct AddExpenseView: View {
     private func section<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             Text(title)
-                .font(AppTypography.headline)
+                .font(.system(.headline, design: .rounded))
                 .foregroundStyle(AppTheme.textPrimary)
 
             content()
         }
+        .padding(AppSpacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCard()
     }
 
     private var categoryGrid: some View {

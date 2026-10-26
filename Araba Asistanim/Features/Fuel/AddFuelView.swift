@@ -34,7 +34,7 @@ struct AddFuelView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.xl) {
                     VStack(alignment: .leading, spacing: AppSpacing.xxs) {
                         Text(isEditing ? "Yakıtı düzenle" : "Yakıt ekle")
-                            .font(AppTypography.largeTitle)
+                            .font(.system(.largeTitle, design: .rounded, weight: .bold))
                             .foregroundStyle(AppTheme.textPrimary)
 
                         Text("\(vehicle.displayName) için yakıt bilgilerini gir.")
@@ -127,11 +127,14 @@ struct AddFuelView: View {
     private func section<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             Text(title)
-                .font(AppTypography.headline)
+                .font(.system(.headline, design: .rounded))
                 .foregroundStyle(AppTheme.textPrimary)
 
             content()
         }
+        .padding(AppSpacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCard()
     }
 
     private var fullTankToggle: some View {
