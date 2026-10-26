@@ -203,7 +203,9 @@ struct AuthView: View {
             AuthDivider()
 
             VStack(spacing: AppSpacing.sm) {
-                AuthSocialButton(provider: .apple, isLoading: loadingProvider == .apple) { signIn(with: .apple) }
+                if AppFeatures.appleSignInEnabled {
+                    AuthSocialButton(provider: .apple, isLoading: loadingProvider == .apple) { signIn(with: .apple) }
+                }
                 AuthSocialButton(provider: .google, isLoading: loadingProvider == .google) { signIn(with: .google) }
             }
             .disabled(authViewModel.isAuthenticating)
